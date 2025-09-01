@@ -81,25 +81,25 @@ def crankshaft_move(c, k) :
     x_next2, y_next2 = cp[k+2]
 
     if x_prev == x_next2 and x == x_next:
-        if x == x_prev + 1 and ((x - 1, y) not in c) and ((x_next - 1, y_next) not in c) :
-            cp[k] = (x - 1, y)
-            cp[k+1] = (x_next - 1, y_next)
+        if x == x_prev + 1 and ((x - 2, y) not in c) and ((x_next - 2, y_next) not in c) :
+            cp[k] = (x - 2, y)
+            cp[k+1] = (x_next - 2, y_next)
             return(True, cp)
         
-        elif x == x_prev - 1 and ((x + 1, y) not in c) and ((x_next + 1, y_next) not in c) :
-            cp[k] = (x + 1, y)
-            cp[k+1] = (x_next + 1, y_next)
+        elif x == x_prev - 1 and ((x + 2, y) not in c) and ((x_next + 2, y_next) not in c) :
+            cp[k] = (x + 2, y)
+            cp[k+1] = (x_next + 2, y_next)
             return(True, cp)
 
     elif y_prev == y_next2 and y == y_next:
-        if y == y_prev + 1 and ((x, y - 1) not in c) and ((x_next, y_next - 1) not in c) :
-            cp[k] = (x, y - 1)
-            cp[k+1] = (x_next, y_next - 1)
+        if y == y_prev + 1 and ((x, y - 2) not in c) and ((x_next, y_next - 2) not in c) :
+            cp[k] = (x, y - 2)
+            cp[k+1] = (x_next, y_next - 2)
             return(True, cp)
         
-        elif y == y_prev - 1 and ((x, y + 1) not in c) and ((x_next, y_next + 1) not in c) :
-            cp[k] = (x, y + 1)
-            cp[k+1] = (x_next, y_next + 1)
+        elif y == y_prev - 1 and ((x, y + 2) not in c) and ((x_next, y_next + 2) not in c) :
+            cp[k] = (x, y + 2)
+            cp[k+1] = (x_next, y_next + 2)
             return(True, cp)
         
     return(False, cp)
