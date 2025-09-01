@@ -37,9 +37,7 @@ def end_move(c, k) :
 
     return (False, cp)  # No move possible
 
-# ----- TEST -----
-# c = end_move([(0, 0), (0, 1), (0, 2), (0, 3)], 3))
-# print(c)
+
 
 
 def corner_move(c, k):
@@ -66,9 +64,50 @@ def corner_move(c, k):
         
     return (False, cp)
 
-# ----- TEST -----
-# c = [(0, 0), (1, 0), (1, 1), (2, 1)]
-# print(corner_move(c, 1))
+
+
+
+def crankshaft_move(c, k) :
+    """
+    Applies a crankshaft move to residue k, where k must be between 1 and n-3. We consider k as the first corner of the U.
+    Returns (True, new_conformation) if the move is possible, otherwise (False, unchanged_conformation).
+    """
+
+    cp =  c.copy()
+
+    x_prev, y_prev = cp[k-1]
+    x, y = cp[k]
+    x_next, y_next = cp[k+1]
+    x_next2, y_next2 = cp[k+2]
+
+    if x_prev == x_next2 and x == x_next:
+        if x == x_prev + 1 and ((x - 1, y) not in c) and ((x_next - 1, y_next) not in c) :
+            cp[k] = (x - 1, y)
+            cp[k+1] = (x_next - 1, y_next)
+            return(True, cp)
+        
+        elif x == x_prev - 1 and ((x + 1, y) not in c) and ((x_next + 1, y_next) not in c) :
+            cp[k] = (x + 1, y)
+            cp[k+1] = (x_next + 1, y_next)
+            return(True, cp)
+
+    elif y_prev == y_next2 and y == y_next:
+        if y == y_prev + 1 and ((x, y - 1) not in c) and ((x_next, y_next - 1) not in c) :
+            cp[k] = (x, y - 1)
+            cp[k+1] = (x_next, y_next - 1)
+            return(True, cp)
+        
+        elif y == y_prev - 1 and ((x, y + 1) not in c) and ((x_next, y_next + 1) not in c) :
+            cp[k] = (x, y + 1)
+            cp[k+1] = (x_next, y_next + 1)
+            return(True, cp)
+        
+    return(False, cp)
+
+
+
+
+
 
 
 
