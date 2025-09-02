@@ -40,8 +40,8 @@ energy = E(c, hp_sequence)
 hp = "HPPHHPPHHP"
 c = [(2, -2), (2, -1), (2, 0), (2, 1), (1, 1), 
     (1, 2), (0, 2), (0, 1), (-1, 1), (-1, 0)]
-cp = M_vshd(c, 4)
-plot_molecules_side_by_side(c, cp, hp)
+#cp = M_vshd(c, 4)
+#plot_molecules_side_by_side(c, cp, hp)
 
 
 
@@ -52,3 +52,24 @@ c = [(2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),(0, 0) ]
 #cp = pull_move(c, 1)
 #print("Pull move result:", cp)
 #plot_molecules_side_by_side(c, cp[1], hp)
+
+
+
+# ----- Tests Montecarlo -----
+hp = "HPPHHPPHHP"
+hp = "HHHHHHHHHH"
+hp = "HPHPHPHPHP"
+hp = "HPPHPPHPPH"
+c = [(2, -2), (2, -1), (2, 0), (2, 1), (1, 1), 
+    (1, 2), (0, 2), (0, 1), (-1, 1), (-1, 0)]
+#cp = MCsearch(100000,c,hp)
+#plot_molecules_side_by_side(c, cp[2], hp)
+#print(cp[3])
+
+
+
+hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
+c = generate_random_conformation(hp)
+cp = MCsearch(50000,c,hp)
+plot_molecules_side_by_side(c, cp[2], hp)
+print(cp[3])

@@ -17,19 +17,21 @@ def M_vshd(c, k):
         corner_possible, new_c = corner_move(c_prime, k)
         if corner_possible:
             return new_c
-
-    rand = random.randint(1,2)
-    corner_possible, new_c_corner = corner_move(c_prime, k)
-    crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
-
-    if rand == 1 and corner_possible :
-        return new_c_corner
-            
-    if crankshaft_possible:
-        return new_c_crankshaft
     
-    if corner_possible :
-        return new_c_corner
+    else :
+
+        rand = random.randint(1,2)
+        corner_possible, new_c_corner = corner_move(c_prime, k)
+        crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
+
+        if rand == 1 and corner_possible :
+            return new_c_corner
+                
+        if crankshaft_possible:
+            return new_c_crankshaft
+        
+        if corner_possible :
+            return new_c_corner
 
     # Si aucun mouvement n'est possible, retourne la conformation inchangée
     return c_prime
@@ -141,21 +143,6 @@ def crankshaft_move(c, k) :
             return(True, cp)
         
     return(False, cp)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
