@@ -12,6 +12,8 @@ def Config_initiale(molécule) :
     c_initial = [(i, 0) for i in range(len(molécule))]
     return c_initial
 
+
+
 def generate_random_conformation(hp_sequence):
     """
     Generates a random valid conformation (coordinates) for a given HP sequence.
