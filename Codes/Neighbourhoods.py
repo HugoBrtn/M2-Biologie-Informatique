@@ -1,5 +1,6 @@
 import random
 from Others_function import *
+from Grid import *
 
 def M_vshd(c, k):
     """
@@ -194,7 +195,7 @@ def crankshaft_move(c, k):
 
 def pull_move(c, k):
     """
-    Applies a crankshaft pull move to residue k.
+    Applies a pull move to residue k.
     We consider k as the first corner of the U-shaped segment.
 
     Args:
@@ -261,4 +262,96 @@ def pull_move(c, k):
 
 
 
+def pull_move(c, k):
+    """
+    Applies a pull move to residue k where k must be between 0 and n-3.
+    We consider k as the first corner of the U-shaped segment.
 
+    Args:
+        c (list of tuples): Current conformation as a list of (x, y) coordinates
+        k (int): Index of the residue to move (must be between 1 and n-3)
+
+    Returns:
+        tuple: (bool, new_conformation)
+            bool: True if the move was successful, False otherwise
+            new_conformation: The new conformation after the move (or the original if no move was possible)
+    """
+    cp = c.copy()
+    cp2 = c.copy()
+
+    n =len(cp)
+
+    q = 0
+    
+
+    while k + q != n-3 :
+        xi, yi = cp2[k + q]
+        #xi_prev, yi_prev = c0[k-1]
+        xi_next, yi_next = cp2[k + q + 1]
+        xi_next2, yi_next2 = cp2[k + q + 2]
+
+        # Two candidates possibles to be adjacent to previous residue and in the corner of the current one (L)
+        L1_x, L1_y = xi + (yi - yi_next), yi + (xi_next - xi)
+        L2_x, L2_y = xi - (yi - yi_next), yi - (xi_next - xi)
+
+        # And the two candidates to be in the corner (C)
+        C1_x, C1_y = xi_next - (yi_next - yi), yi_next - (xi - xi_next)
+        C2_x, C2_y = xi_next + (yi_next - yi), yi_next + (xi - xi_next)
+
+        # We check if L1/2 is free and C1/2 is on the same place with next residue
+        cond_L1 = (L1_x, L1_y) not in cp2 #and is_adjacent((L1_x, L1_y), cp[k + q])
+        cond_L2 = (L2_x, L2_y) not in cp2 #and is_adjacent((L2_x, L2_y), cp[k + q])
+        cond_C1_in_Cp2 = (C1_x, C1_y) not in cp2
+        cond_C2_in_Cp2 = (C2_x, C2_y) not in cp2        
+        
+        cp2 = cp.copy()
+
+        rand = random.randint(1, 2)
+
+        # If a candidate is free and the corresponding C is in the right place, we make the move and return
+        if cond_L1 and (C1_x, C1_y) == (xi_next2, yi_next2) :
+            cp[k + q + 1] = (L1_x, L1_y)
+            if is_valid_conformation(cp):
+                return (True, cp)
+            else :
+                return (False, c)
+        
+        elif cond_L2 and (C2_x, C2_y) == (xi_next2, yi_next2) :
+            cp[k + q + 1] = (L2_x, L2_y)
+            if is_valid_conformation(cp):
+                return (True, cp)
+            else :
+                return (False, c)
+
+        elif rand == 1 and cond_L1 and cond_C1_in_Cp2:
+            cp[k + q + 1] = (L1_x, L1_y)
+
+        elif cond_L2 and cond_C2_in_Cp2:
+            cp[k + q + 1] = (L2_x, L2_y)
+
+        elif cond_L1 and cond_C1_in_Cp2:
+            cp[k + q + 1] = (L1_x, L1_y)
+
+        q += 1
+
+    return (False, c)
+
+
+
+
+# Exemple
+hp = "HPHHPPHPPH"
+c = [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0)]
+# c = [(2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),(0, 0)]
+c =[(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(3,1),(2,1),(2,0),(2,-1)]
+cp = pull_move(c, 3)
+print("Pull move result 0 :", pull_move(c, 0))
+print("Pull move result 1 :", pull_move(c, 1))
+print("Pull move result 2 :", pull_move(c, 2))
+print("Pull move result 3 :", pull_move(c, 3))
+print("Pull move result 4 :", pull_move(c, 4))
+print("Pull move result 5 :", pull_move(c, 5))
+print("Pull move result 6 :", pull_move(c, 6))
+print("Pull move result 7 :", pull_move(c, 7))
+
+plot_molecules_side_by_side(c, cp[1], hp)

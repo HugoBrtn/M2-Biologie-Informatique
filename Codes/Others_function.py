@@ -71,7 +71,17 @@ def generate_random_conformation(hp_sequence):
 
     return result
 
-
+def is_valid_conformation(cp):
+    """Vérifie si une conformation est valide (auto-évitante et connectée)."""
+    n = len(cp)
+    # Vérifier l'unicité des positions (auto-évitant)
+    if len(set(cp)) != n:
+        return False
+    # Vérifier la connectivité des résidus adjacents
+    for i in range(1, n):
+        if not is_adjacent(cp[i-1], cp[i]):
+            return False
+    return True
 
 
 def E(c, hp_sequence):

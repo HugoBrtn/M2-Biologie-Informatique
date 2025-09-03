@@ -31,7 +31,7 @@ def plot_molecule(c, hp_sequence, point_size=200, grid_color='gray', bg_color='w
         color = 'red' if residue_type == 'H' else 'blue'
         ax.scatter(x, y, color=color, s=point_size)
         # Add residue number label
-        ax.text(x, y, str(i+1), ha='center', va='center', color='white', fontsize=10)
+        ax.text(x, y, str(i), ha='center', va='center', color='white', fontsize=10)
 
     # Create bonds between consecutive residues
     for i in range(len(c) - 1):
@@ -96,7 +96,7 @@ def plot_molecules_side_by_side(c1, c2, hp_sequence, point_size=200, grid_color=
             residue_type = hp_sequence[i]
             color = 'red' if residue_type == 'H' else 'blue'
             ax.scatter(x, y, color=color, s=point_size)
-            ax.text(x, y, str(i+1), ha='center', va='center', color='white', fontsize=10)
+            ax.text(x, y, str(i), ha='center', va='center', color='white', fontsize=10)
 
         # Create bonds between consecutive residues
         for i in range(len(c) - 1):

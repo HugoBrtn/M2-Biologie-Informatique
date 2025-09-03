@@ -1,7 +1,8 @@
 import random
 from math import exp
 from Neighbourhoods import *
-from Others_functions import *
+from Others_function import *
+from Grid import *
 
 
 
@@ -44,7 +45,7 @@ def MCsearch(phi, c, hp, T=220):
                 E_mini = E(c_prime, hp)
 
         else:
-            q = random()  # Generate a random number between 0 and 1
+            q = random.random()  # Generate a random number between 0 and 1
             # Metropolis criterion : accept with certain probability if energy increases
             if q < (1 / (exp(1) ** (delta_E / T))):
                 c = c_prime  
@@ -117,7 +118,7 @@ def REMCSimulation(phi, c, hp, E_star, T_init=160, T_final=220, chi=5):
                 replicas[i], replicas[j] = replicas[j], replicas[i]
             else:
                 # Accept with probability if energy difference is unfavorable
-                if random() < exp(-delta):
+                if random.random() < exp(-delta):
                     replicas[i], replicas[j] = replicas[j], replicas[i]
 
             i += 2  # Move to next pair of replicas
