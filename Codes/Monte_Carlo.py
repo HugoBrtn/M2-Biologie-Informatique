@@ -1,124 +1,155 @@
 import random
 from math import exp
 from Neighbourhoods import *
+from Others_functions import *
 
 
-def Config_initiale(molécule) :
-    """ On prend une molécule sous forme de chaine de caractère H ou P et on renvoit une configuration linéaire de cette 
-    molécule sous frome de liste de tuples.
 
-    Exemple : Config_initiale('HPH') retourne [(0, 0), (1, 0), (2, 0)]
+def MCsearch(phi, c, hp, T=220):
     """
-    c_initial = [(i, 0) for i in range(len(molécule))]
-    return c_initial
-
-
-
-def generate_random_conformation(hp_sequence):
-    """
-    Generates a random valid conformation (coordinates) for a given HP sequence.
-    The conformation is a self-avoiding walk on a 2D lattice.
+    Perform a Monte Carlo search to find a low-energy conformation of an HP sequence.
 
     Args:
-        hp_sequence (str): HP sequence (e.g., "HPPHHPHPPH")
+        phi (int): Number of iterations/moves to perform.
+        c (list of tuples): Current conformation as a list of (x, y) coordinates.
+        hp (str): HP sequence (Ewample : "HPPHHPH").
+        T (float, optional): Temperature parameter for Metropolis criterion. Defaults to 220.
 
     Returns:
-        list: List of (x, y) coordinates representing a valid conformation
+        tuple: (final_conformation, final_energy, best_conformation, best_energy)
     """
-    # Length of the sequence
-    n = len(hp_sequence)
-
-    # Start at origin (0, 0)
-    c = [(0, 0)]
-
-    # Possible movement directions: up, down, left, right
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-
-    # Track visited positions to ensure self-avoiding walk
-    visited = set(c)
-
-    # Try to build the conformation step by step
-    for i in range(1, n):
-        last_x, last_y = c[-1]
-        # Shuffle directions to try them in random order
-        random.shuffle(directions)
-
-        # Try each direction until a valid move is found
-        for dx, dy in directions:
-            new_pos = (last_x + dx, last_y + dy)
-
-            # Check if the new position is not already visited
-            if new_pos not in visited:
-                c.append(new_pos)
-                visited.add(new_pos)
-                break
-        else:
-            # If no valid move found, backtrack and try again
-            # This is a simplified approach; a more robust solution would use a proper backtracking algorithm
-            # For simplicity, we'll just add a position that might cause overlap (not ideal)
-            # In practice, you might want to restart the process or use a more sophisticated method
-            c.append((last_x + 1, last_y))  # Default move right (might cause overlap)
-
-    return c
-
-
-def E(c, hp_sequence):
-    """
-    Args:
-        c (list of tuples): Liste des coordonnées (x, y) des résidus.
-        hp_sequence (str): Chaîne de caractères représentant la séquence HP (ex: "HPPH").
-
-    Returns:
-        int: Énergie de la conformation (plus l'énergie est basse, mieux c'est).
-    """
- 
-    # Liste des indices des résidus H
-    h_indices = [i for i, residue in enumerate(hp_sequence) if residue == 'H']
-
-    energy = 0
-
-    # Parcourir toutes les paires de résidus H non consécutifs
-    for i in range(len(h_indices)):
-        for j in range(i + 1, len(h_indices)):
-            idx_i = h_indices[i]
-            idx_j = h_indices[j]
-
-            # Vérifier si les résidus ne sont pas consécutifs dans la séquence
-            if abs(idx_i - idx_j) > 1:
-                # Vérifier si les résidus sont adjacents sur le treillis
-                if abs(c[idx_i][0] - c[idx_j][0]) + abs(c[idx_i][1] - c[idx_j][1]) == 1:
-                    energy -= 1  # Chaque contact H-H contribue à -1 à l'énergie
-
-    return energy
-
-
-
-
-def MCsearch(phi, c, hp, T=220) :
-
     n = len(c)
-
     c_mini = c.copy()
-    E_mini = E(c, hp)
+    E_mini = E(c, hp)  # Calculate initial energy
+    total_changes = 0
 
     for i in range(phi):
-        c_prime = c.copy()  # Crée une copie de la conformation actuelle
-        k = random.randint(1, len(c)-1)  # Choisit un résidu aléatoire
-        c_prime = M_vshd(c_prime, k)  # Applique un mouvement aléatoire
+        c_prime = c.copy() 
+        k = randint(1, len(c)-1)  # Choose a random residue (1-based index)
+        change, c_prime = M_vshd(c_prime, k)  # Apply a random VSHD move
 
-        delta_E = E(c_prime,hp) - E(c, hp)  # Calcule la différence d'énergie
-        delta_E_mini = E(c_prime,hp) - E_mini
+        total_changes += change
 
+        # Calculate energy differences
+        delta_E = E(c_prime, hp) - E(c, hp)  # Energy difference with current conformation
+        delta_E_mini = E(c_prime, hp) - E_mini  # Energy difference with best conformation found
+
+        # Always accept if energy decreases or stays the same
         if delta_E <= 0:
-            c = c_prime  # Accepte toujours si l'énergie diminue ou reste la même
-            
-            if delta_E_mini < 0 :
-                c_mini = c_prime
-                E_mini = E(c_prime,hp)
-        
-        else:
-            q = random.random()  # Génère un nombre aléatoire entre 0 et 1
-            if q < (1 / (exp(1) ** (delta_E / T))):  # Critère de Metropolis
-                c = c_prime  # Accepte avec une certaine probabilité si l'énergie augmente
+            c = c_prime
 
-    return c, E(c,hp), c_mini, E_mini
+            # Update best conformation if this one is better
+            if delta_E_mini < 0:
+                c_mini = c_prime
+                E_mini = E(c_prime, hp)
+
+        else:
+            q = random()  # Generate a random number between 0 and 1
+            # Metropolis criterion : accept with certain probability if energy increases
+            if q < (1 / (exp(1) ** (delta_E / T))):
+                c = c_prime  
+
+    # Return final conformation, its energy, best conformation found, and its energy
+    return c, E(c, hp), c_mini, E_mini, total_changes
+
+
+
+
+def REMCSimulation(phi, c, hp, E_star, T_init=160, T_final=220, chi=5):
+    """
+    Perform a Replica Exchange Monte Carlo (REMC) simulation to find a low-energy conformation of an HP sequence.
+
+    Args:
+        phi (int): Number of iterations/moves to perform for each replica.
+        c (list of tuples): Initial conformation as a list of (x, y) coordinates.
+        hp (str): HP sequence (Example: "HPPHHPH").
+        E_star (int): Target energy level for the simulation.
+        T_init (float, optional): Minimum temperature. Defaults to 160.
+        T_final (float, optional): Maximum temperature. Defaults to 220.
+        chi (int, optional): Number of replicas to simulate. Defaults to 5.
+
+    Returns:
+        tuple: (best_conformation, best_energy)
+    """
+    # Create linear temperature schedule
+    temperatures = [T_init + i * (T_final - T_init) / (chi - 1) for i in range(chi)]
+
+    # Initialize replicas with the same initial conformation and energy
+    replicas = [(c.copy(), E(c, hp)) for _ in range(chi)]
+
+    # Track best conformation and energy
+    best_conformation = c.copy()
+    best_energy = E(c, hp)
+    current_best_energy = float('inf')
+    offset = 0
+
+    # Maximum number of iterations to prevent infinite loops
+    max_iterations = 1000
+    iteration = 0
+
+    while current_best_energy > E_star and iteration < max_iterations:
+        iteration += 1
+        print(iteration)
+
+        # Perform MC search for each replica
+        for k in range(chi):
+            # Perform MC search
+            new_conformation, new_energy, _, _, _ = MCsearch(phi, replicas[k][0], hp, temperatures[k])
+            replicas[k] = (new_conformation, new_energy)
+
+            # Update best conformation if needed
+            if new_energy < current_best_energy:
+                current_best_energy = new_energy
+                best_conformation = new_conformation.copy()
+                best_energy = new_energy
+
+        # Attempt replica exchanges between neighboring temperatures
+        i = offset
+        while i + 1 < chi:  # Fixed condition to avoid index errors
+            j = i + 1
+
+            # Calculate exchange probability
+            delta = (1/temperatures[j] - 1/temperatures[i]) * (replicas[i][1] - replicas[j][1])
+
+            # Accept exchange with Metropolis criterion
+            if delta <= 0:
+                # Always accept if energy difference is favorable
+                replicas[i], replicas[j] = replicas[j], replicas[i]
+            else:
+                # Accept with probability if energy difference is unfavorable
+                if random() < exp(-delta):
+                    replicas[i], replicas[j] = replicas[j], replicas[i]
+
+            i += 2  # Move to next pair of replicas
+
+        # Toggle offset for next iteration
+        offset = 1 - offset
+
+    return best_conformation, best_energy
+
+
+
+
+
+# ----- Tests Montecarlo -----
+hp = "HPPHHPPHHP"
+hp = "HHHHHHHHHH"
+hp = "HPHPHPHPHP"
+hp = "HPPHPPHPPH"
+c = [(2, -2), (2, -1), (2, 0), (2, 1), (1, 1), 
+    (1, 2), (0, 2), (0, 1), (-1, 1), (-1, 0)]
+#cp = MCsearch(100000,c,hp)
+#plot_molecules_side_by_side(c, cp[2], hp)
+#print(cp[3])
+
+
+
+hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
+c = generate_random_conformation(hp)
+cp = MCsearch(500,c,hp)
+plot_molecules_side_by_side(c, cp[2], hp)
+print('Energie:'+ str(cp[3]))
+print('Total changes:'+ str(cp[4]))
+
+
+
