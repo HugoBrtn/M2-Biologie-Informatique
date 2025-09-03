@@ -1,62 +1,80 @@
 import random
+from Others_function import *
 
 def M_vshd(c, k):
     """
-    Applique un mouvement VSHD (end, corner, ou crankshaft) au résidu k.
+    Applies a VSHD move (end, corner, or crankshaft) to residue k.
+
+    Args:
+        c (list of tuples): Current conformation as a list of (x, y) coordinates
+        k (int): Index of the residue to move (must be between 1 and n-3)
+
+    Returns:
+        tuple: (bool, new_conformation)
+            bool: True if the move was successful, False otherwise
+            new_conformation: The new conformation after the move (or the original if no move was possible)
     """
-    c_prime = c.copy()  # Copie de la conformation
+    c_prime = c.copy()  # Create a copy of the conformation
     n = len(c_prime)
 
-    # Cas 1 : End move (si k est le premier ou dernier résidu)
-    if k == 0 or k == n-1 :
+    # Case 1: End move (if k is the first or last residue)
+    if k == 0 or k == n-1:
         end_move_possible, new_c = end_move(c_prime, k)
         if end_move_possible:
-            return new_c
-    
-    elif k == n-2 :
+            return (True, new_c)
+
+    # Case 2: Corner move (if k is the second-to-last residue)
+    elif k == n-2:
         corner_possible, new_c = corner_move(c_prime, k)
         if corner_possible:
-            return new_c
-    
-    else :
+            return (True, new_c)
 
-        rand = random.randint(1,2)
+    # Case 3: For internal residues, try corner or crankshaft move
+    else:
+        rand = randint(1, 2)  # Randomly choose between corner and crankshaft
         corner_possible, new_c_corner = corner_move(c_prime, k)
         crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
 
-        if rand == 1 and corner_possible :
-            return new_c_corner
-                
+        # Try corner move first if randomly selected
+        if rand == 1 and corner_possible:
+            return (True, new_c_corner)
+
+        # Try crankshaft move if possible
         if crankshaft_possible:
-            return new_c_crankshaft
+            return (True, new_c_crankshaft)
         
-        if corner_possible :
-            return new_c_corner
+        # If crankshaft not possible but corner is, use corner move
+        if corner_possible:
+            return (True, new_c_corner)
 
-    # Si aucun mouvement n'est possible, retourne la conformation inchangée
-    return c_prime
+    # If no move is possible, return the unchanged conformation
+    return (False, c_prime)
 
 
-
-
-def is_adjacent(pos1, pos2):
-    """Checks if two positions are adjacent on a 2D lattice."""
-    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1]) == 1
 
 
 
 def end_move(c, k) :
     """
     Applies an end move to residue k, where k must be first (0) or last residue (n-1).
-    Returns (True, new_conformation) if the move is possible, otherwise (False, unchanged_conformation).
+
+    Args :
+        c (list of tuples) : current conformation
+        k (int) : index of the residue to move (0 or n-1)
+        
+    Returns :
+        tuple : (bool, new_conformation)
+            bool : True if the move was successful, False otherwise
+            new_conformation : the new conformation after the move (or the original if no move was possible)    
     """
     cp = c.copy()
+
     if k == 0:
         neighbour_residue = c[1]  # Residue 1
     else:  # k == n-1
         neighbour_residue = c[-2]  # Residue n-2
 
-    # Possible directions in a 2D lattice: up, down, left, right
+    # Possible directions in a 2D lattice:
     x_nr = neighbour_residue[0]
     y_nr = neighbour_residue[1]
     directions = [(0, 1), (0, -1), (1, 0), (-1, 0)] 
@@ -83,7 +101,15 @@ def end_move(c, k) :
 def corner_move(c, k):
     """
     Applies a corner move to residue k, where k must be between 1 and n-2.
-    Returns (True, new_conformation) if the move is possible, otherwise (False, unchanged_conformation).
+
+    Args :
+        c (list of tuples) : current conformation
+        k (int) : index of the residue to move (0 or n-1)
+        
+    Returns :
+        tuple : (bool, new_conformation)
+            bool : True if the move was successful, False otherwise
+            new_conformation : the new conformation after the move (or the original if no move was possible)
     """
     cp =  c.copy()
 
@@ -107,42 +133,59 @@ def corner_move(c, k):
 
 
 
-def crankshaft_move(c, k) :
+def crankshaft_move(c, k):
     """
-    Applies a crankshaft move to residue k, where k must be between 1 and n-3. We consider k as the first corner of the U.
-    Returns (True, new_conformation) if the move is possible, otherwise (False, unchanged_conformation).
+    Applies a crankshaft move to residue k, where k must be between 1 and n-3.
+    We consider k as the first corner of the U-shaped segment.
+
+    Args:
+        c (list of tuples): Current conformation as a list of (x, y) coordinates
+        k (int): Index of the residue to move (must be between 1 and n-3)
+
+    Returns:
+        tuple: (bool, new_conformation)
+            bool: True if the move was successful, False otherwise
+            new_conformation: The new conformation after the move (or the original if no move was possible)
     """
 
-    cp =  c.copy()
+    cp = c.copy()
 
-    x_prev, y_prev = cp[k-1]
-    x, y = cp[k]
-    x_next, y_next = cp[k+1]
-    x_next2, y_next2 = cp[k+2]
+    # Get coordinates of the four residues involved in the crankshaft move
+    x_prev, y_prev = cp[k-1]   # Previous residue (first corner of U)
+    x, y = cp[k]              # Current residue (second corner of U)
+    x_next, y_next = cp[k+1]  # Next residue (third corner of U)
+    x_next2, y_next2 = cp[k+2] # Residue after next (fourth corner of U)
 
+    # Check for horizontal U-shape (residues k-1 and k+2 have same x-coordinate)
     if x_prev == x_next2 and x == x_next:
-        if x == x_prev + 1 and ((x - 2, y) not in c) and ((x_next - 2, y_next) not in c) :
-            cp[k] = (x - 2, y)
-            cp[k+1] = (x_next - 2, y_next)
-            return(True, cp)
-        
-        elif x == x_prev - 1 and ((x + 2, y) not in c) and ((x_next + 2, y_next) not in c) :
-            cp[k] = (x + 2, y)
-            cp[k+1] = (x_next + 2, y_next)
-            return(True, cp)
+        # Case 1: U opens to the right - rotate 180° to the left
+        if x == x_prev + 1 and ((x - 2, y) not in c) and ((x_next - 2, y_next) not in c):
+            cp[k] = (x - 2, y)          # Move current residue left by 2 units
+            cp[k+1] = (x_next - 2, y_next)  # Move next residue left by 2 units
+            return (True, cp)
 
+        # Case 2: U opens to the left - rotate 180° to the right
+        elif x == x_prev - 1 and ((x + 2, y) not in c) and ((x_next + 2, y_next) not in c):
+            cp[k] = (x + 2, y)          # Move current residue right by 2 units
+            cp[k+1] = (x_next + 2, y_next)  # Move next residue right by 2 units
+            return (True, cp)
+
+    # Check for vertical U-shape (residues k-1 and k+2 have same y-coordinate)
     elif y_prev == y_next2 and y == y_next:
-        if y == y_prev + 1 and ((x, y - 2) not in c) and ((x_next, y_next - 2) not in c) :
-            cp[k] = (x, y - 2)
-            cp[k+1] = (x_next, y_next - 2)
-            return(True, cp)
-        
-        elif y == y_prev - 1 and ((x, y + 2) not in c) and ((x_next, y_next + 2) not in c) :
-            cp[k] = (x, y + 2)
-            cp[k+1] = (x_next, y_next + 2)
-            return(True, cp)
-        
-    return(False, cp)
+        # Case 3: U opens downward - rotate 180° upward
+        if y == y_prev + 1 and ((x, y - 2) not in c) and ((x_next, y_next - 2) not in c):
+            cp[k] = (x, y - 2)          # Move current residue down by 2 units
+            cp[k+1] = (x_next, y_next - 2)  # Move next residue down by 2 units
+            return (True, cp)
+
+        # Case 4: U opens upward - rotate 180° downward
+        elif y == y_prev - 1 and ((x, y + 2) not in c) and ((x_next, y_next + 2) not in c):
+            cp[k] = (x, y + 2)          # Move current residue up by 2 units
+            cp[k+1] = (x_next, y_next + 2)  # Move next residue up by 2 units
+            return (True, cp)
+
+    # If none of the above conditions are met, return False with original conformation
+    return (False, cp)
 
 
 
@@ -151,8 +194,17 @@ def crankshaft_move(c, k) :
 
 def pull_move(c, k):
     """
-    Applies a pull move to residue k, where k must be between 
-    Returns (True, new_conformation) if the move is possible, otherwise (False, unchanged_conformation).
+    Applies a crankshaft pull move to residue k.
+    We consider k as the first corner of the U-shaped segment.
+
+    Args:
+        c (list of tuples): Current conformation as a list of (x, y) coordinates
+        k (int): Index of the residue to move (must be between 1 and n-3)
+
+    Returns:
+        tuple: (bool, new_conformation)
+            bool: True if the move was successful, False otherwise
+            new_conformation: The new conformation after the move (or the original if no move was possible)
     """
     c0 =c.copy()
     cp = c.copy()

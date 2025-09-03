@@ -74,8 +74,6 @@ def generate_random_conformation(hp_sequence):
 
 
 
-
-
 def E(c, hp_sequence):
     """
     Args:
