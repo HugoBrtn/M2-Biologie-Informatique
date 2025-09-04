@@ -30,6 +30,8 @@ def M_vshd(c, k):
         if corner_possible:
             return (True, new_c)
 
+    
+
     # Case 3: For internal residues, try corner or crankshaft move
     else:
         rand = randint(1, 2)  # Randomly choose between corner and crankshaft
@@ -338,20 +340,20 @@ def pull_move(c, k):
 
 
 
+if __name__ == "__main__" :
+    # Exemple
+    hp = "HPHHPPHPPH"
+    c = [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0)]
+    # c = [(2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),(0, 0)]
+    c =[(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(3,1),(2,1),(2,0),(2,-1)]
+    cp = pull_move(c, 3)
+    print("Pull move result 0 :", pull_move(c, 0))
+    print("Pull move result 1 :", pull_move(c, 1))
+    print("Pull move result 2 :", pull_move(c, 2))
+    print("Pull move result 3 :", pull_move(c, 3))
+    print("Pull move result 4 :", pull_move(c, 4))
+    print("Pull move result 5 :", pull_move(c, 5))
+    print("Pull move result 6 :", pull_move(c, 6))
+    print("Pull move result 7 :", pull_move(c, 7))
 
-# Exemple
-hp = "HPHHPPHPPH"
-c = [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0)]
-# c = [(2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),(0, 0)]
-c =[(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(3,1),(2,1),(2,0),(2,-1)]
-cp = pull_move(c, 3)
-print("Pull move result 0 :", pull_move(c, 0))
-print("Pull move result 1 :", pull_move(c, 1))
-print("Pull move result 2 :", pull_move(c, 2))
-print("Pull move result 3 :", pull_move(c, 3))
-print("Pull move result 4 :", pull_move(c, 4))
-print("Pull move result 5 :", pull_move(c, 5))
-print("Pull move result 6 :", pull_move(c, 6))
-print("Pull move result 7 :", pull_move(c, 7))
-
-plot_molecules_side_by_side(c, cp[1], hp)
+    plot_molecules_side_by_side(c, cp[1], hp)

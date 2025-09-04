@@ -120,8 +120,9 @@ def plot_molecules_side_by_side(c1, c2, hp_sequence, point_size=200, grid_color=
     plt.show()
 
 
-# ----- Test -----
-# c = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1),  
-#    (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (1, 3), (0, 3)]
-# hp_sequence = "HPPHHPHPPHHPHPPHHPHP"
-# plot_molecule(c, hp_sequence, point_size=200, grid_color='gray', bg_color='white')
+#----- Test -----
+if __name__ == "__main__" :
+    c = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1),  
+        (0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (4, 3), (3, 3), (2, 3), (1, 3), (0, 3)]
+    hp_sequence = "HPPHHPHPPHHPHPPHHPHP"
+    plot_molecule(c, hp_sequence, point_size=200, grid_color='gray', bg_color='white')
