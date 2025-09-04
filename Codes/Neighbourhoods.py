@@ -2,6 +2,14 @@ import random
 from Others_function import *
 from Grid import *
 
+
+def M(c, k, nu) :
+    rand = random.random()
+    if rand < nu :
+        return pull_move(c, k)
+    return M_vshd(c, k)
+
+
 def M_vshd(c, k):
     """
     Applies a VSHD move (end, corner, or crankshaft) to residue k.
@@ -191,13 +199,9 @@ def crankshaft_move(c, k):
     return (False, cp)
 
 
-
-
-
-
-def pull_move(c, k):
+def pull_move(c, k, max_try = 3) :
     """
-    Applies a pull move to residue k.
+    Applies a pull move forward to residue k where k must be between 0 and n-3.
     We consider k as the first corner of the U-shaped segment.
 
     Args:
@@ -209,64 +213,39 @@ def pull_move(c, k):
             bool: True if the move was successful, False otherwise
             new_conformation: The new conformation after the move (or the original if no move was possible)
     """
-    c0 =c.copy()
-    cp = c.copy()
-
-    n =len(c0)
-
-    while k != n-1 :
-        xi, yi = c0[k]
-        xi_prev, yi_prev = c0[k-1]
-        xi_next, yi_next = c0[k+1]
-
-        # Two candidates possibles to be adjacent to previous residue and in the corner of the current one (L)
-        L1_x, L1_y = xi_prev + (yi_prev - yi), yi_prev + (xi - xi_prev)
-        L2_x, L2_y = xi_prev - (yi_prev - yi), yi_prev - (xi - xi_prev)
-
-        # And the two candidates to be in the corner (C)
-        C1_x, C1_y = xi - (yi - yi_prev), yi - (xi_prev - xi)
-        C2_x, C2_y = xi + (yi - yi_prev), yi + (xi_prev - xi)
-
-        # We check if L1/2 is free and C1/2 is on the same place with next residue
-        cond_L1_in_Cp = (L1_x, L1_y) not in cp
-        cond_L2_in_Cp = (L2_x, L2_y) not in cp
-
-        if cond_L1_in_Cp and (C1_x, C1_y) == (xi_next, yi_next) :
-            cp[k] = (L1_x, L1_y)
-            return (True, cp)
-        
-        elif cond_L2_in_Cp and (C2_x, C2_y) == (xi_next, yi_next) :
-            cp[k] = (L2_x, L2_y)
-            return (True, cp)
-
-        elif cond_L1_in_Cp and (C1_x, C1_y) not in cp:
-            cp[k] = (L1_x, L1_y)
-            k += 1
-
-        elif cond_L2_in_Cp and (C2_x, C2_y) not in cp:
-            cp[k] = (L2_x, L2_y)
-            k += 1
-
-        return (False, c0)
+    if k <= len(c)-3 :
+        bool_forward, c_forward = pull_move_forward(c, k, max_try)
+        if bool_forward :
+            return bool_forward, c_forward
+    return pull_move_backward(c, k, max_try)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def pull_move(c, k):
+def pull_move_backward(c, k, max_try = 3):
     """
-    Applies a pull move to residue k where k must be between 0 and n-3.
+    Applies a pull move backward to residue k where k must be between 0 and n-3.
+    We consider k as the first corner of the U-shaped segment.
+
+    Args:
+        c (list of tuples): Current conformation as a list of (x, y) coordinates
+        k (int): Index of the residue to move (must be between 1 and n-3)
+
+    Returns:
+        tuple: (bool, new_conformation)
+            bool: True if the move was successful, False otherwise
+            new_conformation: The new conformation after the move (or the original if no move was possible)
+    """
+    cp = c.copy()
+    n=len(c)
+    cp.reverse()
+    c0 = pull_move_forward(cp, n-k+1, max_try)
+    c1 = c0[1]
+    c1.reverse()
+    return c0[0], c1
+
+
+def pull_move_forward(c, k, max_try = 3):
+    """
+    Applies a pull move forward to residue k where k must be between 0 and n-3.
     We consider k as the first corner of the U-shaped segment.
 
     Args:
@@ -283,10 +262,13 @@ def pull_move(c, k):
 
     n =len(cp)
 
-    q = 0
-    
+    if k > n-3 :
+        return (False, c)
 
-    while k + q != n-3 :
+    q = 0
+    seuil = 0
+
+    while k + q != n-3 or seuil > max_try:
         xi, yi = cp2[k + q]
         #xi_prev, yi_prev = c0[k-1]
         xi_next, yi_next = cp2[k + q + 1]
@@ -315,6 +297,11 @@ def pull_move(c, k):
             cp[k + q + 1] = (L1_x, L1_y)
             if is_valid_conformation(cp):
                 return (True, cp)
+            elif seuil < max_try :
+                cp = c.copy()
+                cp2 = c.copy()
+                q=0
+                seuil += 1
             else :
                 return (False, c)
         
@@ -322,6 +309,11 @@ def pull_move(c, k):
             cp[k + q + 1] = (L2_x, L2_y)
             if is_valid_conformation(cp):
                 return (True, cp)
+            elif seuil < max_try :
+                cp = c.copy()
+                cp2 = c.copy()
+                q=0
+                seuil += 1
             else :
                 return (False, c)
 
@@ -346,7 +338,7 @@ if __name__ == "__main__" :
     c = [(0, 0), (0, 1), (0, 2), (1, 2), (1, 3), (2, 3), (2, 2), (2, 1), (2, 0)]
     # c = [(2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (1, 2), (0, 2), (0, 1),(0, 0)]
     c =[(0,0),(0,1),(0,2),(1,2),(2,2),(3,2),(3,1),(2,1),(2,0),(2,-1)]
-    cp = pull_move(c, 3)
+    cp = pull_move(c, 6)
     print("Pull move result 0 :", pull_move(c, 0))
     print("Pull move result 1 :", pull_move(c, 1))
     print("Pull move result 2 :", pull_move(c, 2))
