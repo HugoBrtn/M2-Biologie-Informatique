@@ -109,6 +109,7 @@ def end_move(c, k) :
 
 
 
+
 def corner_move(c, k):
     """
     Applies a corner move to residue k, where k must be between 1 and n-2.
@@ -158,7 +159,6 @@ def crankshaft_move(c, k):
             bool: True if the move was successful, False otherwise
             new_conformation: The new conformation after the move (or the original if no move was possible)
     """
-
     cp = c.copy()
 
     # Get coordinates of the four residues involved in the crankshaft move
@@ -218,6 +218,7 @@ def pull_move(c, k, max_try = 3) :
         if bool_forward :
             return bool_forward, c_forward
     return pull_move_backward(c, k, max_try)
+
 
 
 def pull_move_backward(c, k, max_try = 3):

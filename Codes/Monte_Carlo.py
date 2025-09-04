@@ -6,7 +6,7 @@ from Grid import *
 
 
 
-def MCsearch(phi, c, hp, nu, T=220):
+def MCsearch(phi, c, hp, nu, T=160):
     """
     Perform a Monte Carlo search to find a low-energy conformation of an HP sequence.
 
@@ -20,38 +20,39 @@ def MCsearch(phi, c, hp, nu, T=220):
         tuple: (final_conformation, final_energy, best_conformation, best_energy)
     """
     n = len(c)
-    c_mini = c.copy()
-    E_mini = E(c, hp)  # Calculate initial energy
-    total_changes = 0
+    c_mini = c.copy()  # Best conformation found
+    cp = c.copy() 
+    c_courant = c.copy()
+    Ep = E(cp, hp)  # Current energy
+    E_mini = Ep  # Calculate initial energy
 
     for i in range(phi):
-        c_prime = c.copy() 
-        k = randint(1, len(c)-1)  # Choose a random residue (1-based index)
-        change, c_prime = M(c_prime, k, nu)  # Apply a move, nu is the probability of a pull move (instead vhsd move)
-
-        total_changes += change
+        c_courant = cp.copy()
+        k = randint(0, n-1)  # Choose a random residue (1-based index)
+        bool, c_courant = M(c_courant, k, nu)  # Apply arandom move, nu is the probability of a pull move (instead vhsd move)
 
         # Calculate energy differences
-        delta_E = E(c_prime, hp) - E(c, hp)  # Energy difference with current conformation
-        delta_E_mini = E(c_prime, hp) - E_mini  # Energy difference with best conformation found
+        E_c_courant = E(c_courant, hp)
+        delta_E = E_c_courant - Ep  # Energy difference with best conformation found
 
         # Always accept if energy decreases or stays the same
         if delta_E <= 0:
-            c = c_prime
+            cp = c_courant
+            Ep = E_c_courant
 
             # Update best conformation if this one is better
-            if delta_E_mini < 0:
-                c_mini = c_prime
-                E_mini = E(c_prime, hp)
+            if E_c_courant - E_mini < 0:
+                c_mini = c_courant
+                E_mini = E_c_courant
 
         else:
             q = random.random()  # Generate a random number between 0 and 1
             # Metropolis criterion : accept with certain probability if energy increases
-            if q < (1 / (exp(1) ** (delta_E / T))):
-                c = c_prime  
-
+            if q > (1 / (exp(1) ** (delta_E / T))):
+                cp = c_courant
+                Ep = E_c_courant
     # Return final conformation, its energy, best conformation found, and its energy
-    return c, E(c, hp), c_mini, E_mini, total_changes
+    return c_mini, E_mini
 
 
 
@@ -81,31 +82,28 @@ def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
     # Track best conformation and energy
     best_conformation = c.copy()
     best_energy = E(c, hp)
-    current_best_energy = float('inf')
     offset = 0
 
     # Maximum number of iterations to prevent infinite loops
     max_iterations = 1000
     iteration = 0
 
-    while current_best_energy > E_star and iteration < max_iterations:
+    while best_energy > E_star and iteration < max_iterations:
         iteration += 1
-        print(iteration)
 
         # Perform MC search for each replica
         for k in range(chi):
             # Perform MC search
-            _, _, new_conformation, new_energy, _ = MCsearch(phi, replicas[k][0], hp, temperatures[k], nu)
+            new_conformation, new_energy = MCsearch(phi, replicas[k][0], hp, nu, temperatures[k])
             replicas[k] = (new_conformation, new_energy)
 
             # Update best conformation if needed
-            if new_energy < current_best_energy:
-                current_best_energy = new_energy
+            if new_energy < best_energy:
                 best_conformation = new_conformation.copy()
                 best_energy = new_energy
 
         # Attempt replica exchanges between neighboring temperatures
-        i = offset
+        i = offset + 1
         while i + 1 < chi:  # Fixed condition to avoid index errors
             j = i + 1
 
@@ -130,9 +128,11 @@ def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
 
 
 
-test = "test_REMC"
+
 # ----- Tests Montecarlo -----
 if __name__ == "__main__" :
+
+    test = "test_REMC"
 
     if test == "test_MC_search" :
         hp = "HPPHHPPHHP"
@@ -147,15 +147,15 @@ if __name__ == "__main__" :
 
         hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
         c = generate_random_conformation(hp)
-        cp = MCsearch(10000,c,hp, 0.5)
-        plot_molecules_side_by_side(c, cp[2], hp)
-        print('Energie:'+ str(cp[3]))
-        print('Total changes:'+ str(cp[4]))
+        cp = MCsearch(100000,c,hp, 0.5)
+        plot_molecules_side_by_side(c, cp[0], hp)
+        print('Energie:'+ str(cp[1]))
+        #print('Total changes:'+ str(cp[4]))
 
     elif test == "test_REMC" :
         hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
         c = generate_random_conformation(hp)
-        cp = REMCSimulation(500,c,hp, 0.4, -9)
+        cp = REMCSimulation(1000,c,hp, 0.5, -9)
         plot_molecules_side_by_side(c, cp[0], hp)
         print('Energie:'+ str(cp[1]))
         #print('Total changes:'+ str(cp[4]))
