@@ -85,11 +85,14 @@ def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
     offset = 0
 
     # Maximum number of iterations to prevent infinite loops
-    max_iterations = 1000
+    max_iterations = 500
     iteration = 0
+    
 
     while best_energy > E_star and iteration < max_iterations:
         iteration += 1
+        print("itération : " +str(iteration) + " /  best_energy : " + str(best_energy))
+        
 
         # Perform MC search for each replica
         for k in range(chi):
