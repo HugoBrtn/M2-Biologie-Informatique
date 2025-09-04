@@ -14,7 +14,7 @@ def generate_linear_conformation(hp_sequence):
               Example: Config_initiale('HPH') returns [(0, 0), (1, 0), (2, 0)]
     """
     # Create a linear configuration along the x-axis starting from (0, 0)
-    c_initial = [(i, 0) for i in range(len(molecule))]
+    c_initial = [(i, 0) for i in range(len(hp_sequence))]
     return c_initial
 
 
