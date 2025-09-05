@@ -54,6 +54,11 @@ class HPModelApp:
         self.chi = tk.IntVar(value=5)
         self.hp_sequence = tk.StringVar(value="HPPHHPH")
 
+        ##################
+        self.progress = None
+        self.progress_value = tk.DoubleVar(value=0.0)
+        ##################
+
         # Left frame for parameters
         self.left_frame = ttk.Frame(root, padding="10")
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y)
@@ -115,13 +120,29 @@ class HPModelApp:
         # Quit button
         ttk.Button(self.left_frame, text="Quit", command=self.on_closing).grid(row=16, column=0, pady=5, sticky=tk.W)
 
+        #############################
+        # Ajoutez la barre de progression (masquée par défaut)
+        self.progress = ttk.Progressbar(self.left_frame, orient="horizontal", length=200, mode="determinate", variable=self.progress_value)
+        self.progress.grid(row=14, column=0, pady=5, sticky=tk.W)
+        self.progress.grid_remove()  # Masquée par défaut
+        #############################
+
         # Show MCsearch widgets by default
         self.update_parameter_fields()
+        
 
     def update_parameter_fields(self, *args):
         # Hide all dynamic widgets
         for widget in self.mc_widgets + self.remc_widgets:
             widget.grid_forget()
+
+        #################
+        if self.method_var.get() == "REMCSimulation":
+            # Afficher la barre de progression uniquement pour REMCSimulation
+            self.progress.grid()
+        else:
+            self.progress.grid_remove()
+        #################
 
         # Show widgets based on selected method
         if self.method_var.get() == "MCsearch":
@@ -164,26 +185,37 @@ class HPModelApp:
 
             if self.method_var.get() == "MCsearch":
                 T = self.T.get()
-                best_c, best_E = MCsearch(hp = hp, c = [], phi=phi, nu = nu, T=T)
+                best_c, best_E = MCsearch(phi, c, hp, nu, T)
             else:
                 E_star = self.E_star.get()
                 T_init = self.T_init.get()
                 T_final = self.T_final.get()
                 chi = self.chi.get()
-                best_c, best_E = REMCSimulation(hp = hp, E_star = E_star, c = [], phi = phi, nu = nu, T_init=T_init, T_final=T_final, chi=chi)
 
+                # Réinitialiser la barre de progression
+                self.progress_value.set(0.0)
 
-            # Display result
+                # Définir un callback pour mettre à jour la progression
+                def update_progress(value):
+                    self.progress_value.set(value)
+                    self.root.update_idletasks()  # Mettre à jour l'interface
+
+                best_c, best_E = REMCSimulation(hp = hp, E_star = E_star, c = [], phi = phi, nu = nu, 
+                                                T_init=T_init, T_final=T_final, chi=chi, 
+                                                progress_callback=update_progress)
+
+            # Afficher le résultat
             self.result_text.delete(1.0, tk.END)
             self.result_text.insert(tk.END, f"Minimum energy found: {best_E}\n")
             self.result_text.insert(tk.END, f"Best configuration: {best_c}\n")
 
-            # Display plot
+            # Afficher le plot
             fig = plot_molecule_interface(best_c, hp)
             self.display_plot(fig)
 
         except Exception as e:
             tk.messagebox.showerror("Error", f"An error occurred: {e}")
+
 
     def display_plot(self, fig):
         # Clear previous canvas

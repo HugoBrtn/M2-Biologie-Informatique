@@ -60,7 +60,7 @@ def MCsearch(hp, c = [], phi=500, nu = 0.5, T=160):
 
 
 
-def REMCSimulation(hp, E_star, c = [], phi = 500, nu = 0.5, T_init=160, T_final=220, chi=5):
+def REMCSimulation(hp, E_star, c = [], phi = 500, nu = 0.5, T_init=160, T_final=220, chi=5, progress_callback = None):
     """
     Perform a Replica Exchange Monte Carlo (REMC) simulation to find a low-energy conformation of an HP sequence.
 
@@ -132,6 +132,11 @@ def REMCSimulation(hp, E_star, c = [], phi = 500, nu = 0.5, T_init=160, T_final=
 
         # Toggle offset for next iteration
         offset = 1 - offset
+
+        # Mettre à jour la progression
+        if progress_callback:
+            progress = (iteration / max_iterations) * 100
+            progress_callback(progress)
 
     return best_conformation, best_energy
 
