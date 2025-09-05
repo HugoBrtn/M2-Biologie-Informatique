@@ -6,7 +6,7 @@ from Grid import *
 
 
 
-def MCsearch(phi, c, hp, nu, T=160):
+def MCsearch(hp, c = [], phi=500, nu = 0.5, T=160):
     """
     Perform a Monte Carlo search to find a low-energy conformation of an HP sequence.
 
@@ -19,6 +19,9 @@ def MCsearch(phi, c, hp, nu, T=160):
     Returns:
         tuple: (final_conformation, final_energy, best_conformation, best_energy)
     """
+    if c == [] :
+        c = generate_random_conformation(hp)
+
     n = len(c)
     c_mini = c.copy()  # Best conformation found
     cp = c.copy() 
@@ -57,7 +60,7 @@ def MCsearch(phi, c, hp, nu, T=160):
 
 
 
-def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
+def REMCSimulation(hp, E_star, c = [], phi = 500, nu = 0.5, T_init=160, T_final=220, chi=5):
     """
     Perform a Replica Exchange Monte Carlo (REMC) simulation to find a low-energy conformation of an HP sequence.
 
@@ -73,6 +76,9 @@ def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
     Returns:
         tuple: (best_conformation, best_energy)
     """
+    if c == [] :
+        c = generate_random_conformation(hp)
+        
     # Create linear temperature schedule
     temperatures = [T_init + i * (T_final - T_init) / (chi - 1) for i in range(chi)]
 
@@ -97,7 +103,7 @@ def REMCSimulation(phi, c, hp, nu, E_star, T_init=160, T_final=220, chi=5):
         # Perform MC search for each replica
         for k in range(chi):
             # Perform MC search
-            new_conformation, new_energy = MCsearch(phi, replicas[k][0], hp, nu, temperatures[k])
+            new_conformation, new_energy = MCsearch(hp = hp, c = replicas[k][0],  phi = phi, nu = nu, T = temperatures[k])
             replicas[k] = (new_conformation, new_energy)
 
             # Update best conformation if needed
@@ -144,13 +150,13 @@ if __name__ == "__main__" :
         hp = "HPPHPPHPPH"
         c = [(2, -2), (2, -1), (2, 0), (2, 1), (1, 1), 
             (1, 2), (0, 2), (0, 1), (-1, 1), (-1, 0)]
-        #cp = MCsearch(100000,c,hp)
+        #cp = MCsearch(hp = hp, c = c, phi = 100000)
         #plot_molecules_side_by_side(c, cp[2], hp)
         #print(cp[3])
 
         hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
         c = generate_random_conformation(hp)
-        cp = MCsearch(100000,c,hp, 0.5)
+        cp = MCsearch(hp = hp, c = c, phi = 100000, nu = 0.5)
         plot_molecules_side_by_side(c, cp[0], hp)
         print('Energie:'+ str(cp[1]))
         #print('Total changes:'+ str(cp[4]))
@@ -158,7 +164,7 @@ if __name__ == "__main__" :
     elif test == "test_REMC" :
         hp = "HPHPPHHPHPPHPHHPPHPH"   # L'article indique E*=-9
         c = generate_random_conformation(hp)
-        cp = REMCSimulation(1000,c,hp, 0.5, -9)
+        cp = REMCSimulation(hp=hp, E_star= -9, c = c, phi = 1000, nu = 0.5)
         plot_molecules_side_by_side(c, cp[0], hp)
         print('Energie:'+ str(cp[1]))
         #print('Total changes:'+ str(cp[4]))
