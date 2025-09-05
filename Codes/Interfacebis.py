@@ -185,7 +185,7 @@ class HPModelApp:
 
             if self.method_var.get() == "MCsearch":
                 T = self.T.get()
-                best_c, best_E = MCsearch(phi, c, hp, nu, T)
+                best_c, best_E = MCsearch(hp = hp, c = [], phi = phi, nu = nu, T=T)
             else:
                 E_star = self.E_star.get()
                 T_init = self.T_init.get()
