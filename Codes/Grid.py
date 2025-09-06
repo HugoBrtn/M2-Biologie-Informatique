@@ -111,12 +111,13 @@ def plot_molecules_side_by_side(c1, c2, hp_sequence, point_size=200, grid_color=
             plt.Line2D([0], [0], color='black', linewidth=1.5, label='Bond')
         ]
         ax.legend(handles=handles, loc='upper right')
-        
+
     # Plot both configurations
     plot_single_molecule(ax1, c1, title1)
     plot_single_molecule(ax2, c2, title2)
     plt.tight_layout()
     plt.show()
+
 
 #----- Test -----
 if __name__ == "__main__":
