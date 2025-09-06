@@ -192,7 +192,7 @@ def expand_hp_sequence(compact_notation):
 # ----- Others functions Tests -----
 if __name__ == "__main__":
 
-    test = "random_conformation"    #  "linear_conformation"  # "energy"    # "linear_conformation"    #  "expanded"
+    test = "expanded"    #  "linear_conformation"  # "energy"    # "linear_conformation"    #  "expanded"
 
     # ----- Test Energy -----
     if test == "energy":
@@ -233,5 +233,5 @@ if __name__ == "__main__":
         for seq in sequences:
             expanded = expand_hp_sequence(seq)
 
-            print(f"{seq}\n-> {expanded}\n")
-            print("Size : " + str(len(expanded)))
+            print(f"{seq}\n-> {expanded} ")
+            print("Size : " + str(len(expanded)) +"\n")
