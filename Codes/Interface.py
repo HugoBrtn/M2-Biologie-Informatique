@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import random
+import sys
 from math import exp
 
 
@@ -35,14 +35,15 @@ def plot_molecule_interface(c, hp_sequence, point_size=200, grid_color='gray', b
     plt.title("HP Molecule")
     return fig
 
+
+
 # --- Interface Graphique ---
 class HPModelApp:
     def __init__(self, root):
         self.root = root
         self.root.title("HP Model Simulation")
         self.root.geometry("1000x600")
-
-        # Variables pour les paramètres
+        # Variables for parameters
         self.method_var = tk.StringVar(value="MCsearch")
         self.phi = tk.IntVar(value=1000)
         self.nu = tk.DoubleVar(value=0.5)
@@ -52,135 +53,178 @@ class HPModelApp:
         self.T_final = tk.DoubleVar(value=220.0)
         self.chi = tk.IntVar(value=5)
         self.hp_sequence = tk.StringVar(value="HPPHHPH")
-        self.initial_coords = tk.StringVar(value="[(0,0),(0,1),(0,2),(1,2),(1,1),(1,0),(2,0)]")
 
-        # Frame gauche pour les paramètres
+        ##################
+        self.progress = None
+        self.progress_value = tk.DoubleVar(value=0.0)
+        ##################
+
+        # Left frame for parameters
         self.left_frame = ttk.Frame(root, padding="10")
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        # Frame droit pour les résultats
+        # Right frame for results
         self.right_frame = ttk.Frame(root, padding="10")
         self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Widgets pour MCsearch
+        # Widgets for MCsearch
         self.mc_widgets = []
-        # Widgets pour REMCSimulation
+        # Widgets for REMCSimulation
         self.remc_widgets = []
+
+        # Configure the window close button
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.setup_left_panel()
         self.setup_right_panel()
 
-        # Afficher les widgets par défaut pour MCsearch
+        # Update parameter fields when method changes
         self.method_var.trace_add("write", self.update_parameter_fields)
 
+    def on_closing(self):
+        """Handle the window closing event."""
+        self.root.quit()
+        sys.exit(0)
+
     def setup_left_panel(self):
-        # Méthode
-        ttk.Label(self.left_frame, text="Méthode:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W)
+        # Method selection
+        ttk.Label(self.left_frame, text="Method:", font=('Arial', 10, 'bold')).grid(row=0, column=0, sticky=tk.W)
         ttk.Radiobutton(self.left_frame, text="MCsearch", variable=self.method_var, value="MCsearch").grid(row=1, column=0, sticky=tk.W)
         ttk.Radiobutton(self.left_frame, text="REMCSimulation", variable=self.method_var, value="REMCSimulation").grid(row=2, column=0, sticky=tk.W)
 
-        # Séquence HP
-        ttk.Label(self.left_frame, text="Séquence HP:", font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky=tk.W)
+        # HP sequence
+        ttk.Label(self.left_frame, text="HP Sequence:", font=('Arial', 10, 'bold')).grid(row=3, column=0, sticky=tk.W)
         ttk.Entry(self.left_frame, textvariable=self.hp_sequence, width=30).grid(row=4, column=0, sticky=tk.W)
 
-        # Coordonnées initiales
-        ttk.Label(self.left_frame, text="Coordonnées initiales (ex: [(0,0),(0,1),...]):", font=('Arial', 10, 'bold')).grid(row=5, column=0, sticky=tk.W)
-        ttk.Entry(self.left_frame, textvariable=self.initial_coords, width=30).grid(row=6, column=0, sticky=tk.W)
-
-        # Paramètres MCsearch
-        self.mc_widgets.append(ttk.Label(self.left_frame, text="Nombre d'itérations (phi):", font=('Arial', 10, 'bold')))
+        # MCsearch parameters
+        self.mc_widgets.append(ttk.Label(self.left_frame, text="Number of iterations (phi):", font=('Arial', 10, 'bold')))
         self.mc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.phi, width=10))
-        self.mc_widgets.append(ttk.Label(self.left_frame, text="Probabilité de pull (nu):", font=('Arial', 10, 'bold')))
+        self.mc_widgets.append(ttk.Label(self.left_frame, text="Pull move probability (nu):", font=('Arial', 10, 'bold')))
         self.mc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.nu, width=10))
-        self.mc_widgets.append(ttk.Label(self.left_frame, text="Température (T):", font=('Arial', 10, 'bold')))
+        self.mc_widgets.append(ttk.Label(self.left_frame, text="Temperature (T):", font=('Arial', 10, 'bold')))
         self.mc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.T, width=10))
 
-        # Paramètres REMCSimulation
-        self.remc_widgets.append(ttk.Label(self.left_frame, text="Énergie cible (E_star):", font=('Arial', 10, 'bold')))
+        # REMCSimulation parameters
+        self.remc_widgets.append(ttk.Label(self.left_frame, text="Target energy (E_star):", font=('Arial', 10, 'bold')))
         self.remc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.E_star, width=10))
-        self.remc_widgets.append(ttk.Label(self.left_frame, text="Température initiale (T_init):", font=('Arial', 10, 'bold')))
+        self.remc_widgets.append(ttk.Label(self.left_frame, text="Initial temperature (T_init):", font=('Arial', 10, 'bold')))
         self.remc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.T_init, width=10))
-        self.remc_widgets.append(ttk.Label(self.left_frame, text="Température finale (T_final):", font=('Arial', 10, 'bold')))
+        self.remc_widgets.append(ttk.Label(self.left_frame, text="Final temperature (T_final):", font=('Arial', 10, 'bold')))
         self.remc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.T_final, width=10))
-        self.remc_widgets.append(ttk.Label(self.left_frame, text="Nombre de répliques (chi):", font=('Arial', 10, 'bold')))
+        self.remc_widgets.append(ttk.Label(self.left_frame, text="Number of replicas (chi):", font=('Arial', 10, 'bold')))
         self.remc_widgets.append(ttk.Entry(self.left_frame, textvariable=self.chi, width=10))
 
-        # Bouton de lancement
-        ttk.Button(self.left_frame, text="Lancer la simulation", command=self.run_simulation).grid(row=21, column=0, pady=10, sticky=tk.W)
+        # Run button
+        ttk.Button(self.left_frame, text="Run Simulation", command=self.run_simulation).grid(row=15, column=0, pady=10, sticky=tk.W)
 
-        # Afficher les widgets MCsearch par défaut
+        # Quit button
+        ttk.Button(self.left_frame, text="Quit", command=self.on_closing).grid(row=16, column=0, pady=5, sticky=tk.W)
+
+        #############################
+        # Ajoutez la barre de progression (masquée par défaut)
+        self.progress = ttk.Progressbar(self.left_frame, orient="horizontal", length=200, mode="determinate", variable=self.progress_value)
+        self.progress.grid(row=14, column=0, pady=5, sticky=tk.W)
+        self.progress.grid_remove()  # Masquée par défaut
+        #############################
+
+        # Show MCsearch widgets by default
         self.update_parameter_fields()
+        
 
     def update_parameter_fields(self, *args):
-        # Effacer tous les widgets dynamiques
+        # Hide all dynamic widgets
         for widget in self.mc_widgets + self.remc_widgets:
             widget.grid_forget()
 
-        # Afficher les widgets en fonction de la méthode sélectionnée
-        if self.method_var.get() == "MCsearch":
-            self.mc_widgets[0].grid(row=7, column=0, sticky=tk.W)
-            self.mc_widgets[1].grid(row=8, column=0, sticky=tk.W)
-            self.mc_widgets[2].grid(row=9, column=0, sticky=tk.W)
-            self.mc_widgets[3].grid(row=10, column=0, sticky=tk.W)
-            self.mc_widgets[4].grid(row=11, column=0, sticky=tk.W)
-            self.mc_widgets[5].grid(row=12, column=0, sticky=tk.W)
+        #################
+        if self.method_var.get() == "REMCSimulation":
+            # Afficher la barre de progression uniquement pour REMCSimulation
+            self.progress.grid()
         else:
-            self.remc_widgets[0].grid(row=7, column=0, sticky=tk.W)
-            self.remc_widgets[1].grid(row=8, column=0, sticky=tk.W)
-            self.remc_widgets[2].grid(row=9, column=0, sticky=tk.W)
-            self.remc_widgets[3].grid(row=10, column=0, sticky=tk.W)
-            self.remc_widgets[4].grid(row=11, column=0, sticky=tk.W)
-            self.remc_widgets[5].grid(row=12, column=0, sticky=tk.W)
-            self.remc_widgets[6].grid(row=13, column=0, sticky=tk.W)
-            self.remc_widgets[7].grid(row=14, column=0, sticky=tk.W)
+            self.progress.grid_remove()
+        #################
+
+        # Show widgets based on selected method
+        if self.method_var.get() == "MCsearch":
+            self.mc_widgets[0].grid(row=5, column=0, sticky=tk.W)
+            self.mc_widgets[1].grid(row=6, column=0, sticky=tk.W)
+            self.mc_widgets[2].grid(row=7, column=0, sticky=tk.W)
+            self.mc_widgets[3].grid(row=8, column=0, sticky=tk.W)
+            self.mc_widgets[4].grid(row=9, column=0, sticky=tk.W)
+            self.mc_widgets[5].grid(row=10, column=0, sticky=tk.W)
+        else:
+            self.remc_widgets[0].grid(row=5, column=0, sticky=tk.W)
+            self.remc_widgets[1].grid(row=6, column=0, sticky=tk.W)
+            self.remc_widgets[2].grid(row=7, column=0, sticky=tk.W)
+            self.remc_widgets[3].grid(row=8, column=0, sticky=tk.W)
+            self.remc_widgets[4].grid(row=9, column=0, sticky=tk.W)
+            self.remc_widgets[5].grid(row=10, column=0, sticky=tk.W)
+            self.remc_widgets[6].grid(row=11, column=0, sticky=tk.W)
+            self.remc_widgets[7].grid(row=12, column=0, sticky=tk.W)
+
 
     def setup_right_panel(self):
-        self.result_label = ttk.Label(self.right_frame, text="Résultat:", font=('Arial', 12, 'bold'))
+        self.result_label = ttk.Label(self.right_frame, text="Result:", font=('Arial', 12, 'bold'))
         self.result_label.pack(anchor=tk.NW)
         self.result_text = tk.Text(self.right_frame, height=5, width=50)
         self.result_text.pack(fill=tk.X, padx=5, pady=5)
         self.canvas_frame = ttk.Frame(self.right_frame)
         self.canvas_frame.pack(fill=tk.BOTH, expand=True)
 
+    def generate_initial_coordinates(self, hp_sequence):
+        """Generate initial coordinates as a straight line."""
+        n = len(hp_sequence)
+        return [(i, 0) for i in range(n)]
+
     def run_simulation(self):
         try:
-            # Parse des coordonnées initiales
-            import ast
-            c = ast.literal_eval(self.initial_coords.get())
             hp = self.hp_sequence.get()
+            c = self.generate_initial_coordinates(hp)
             phi = self.phi.get()
             nu = self.nu.get()
 
             if self.method_var.get() == "MCsearch":
                 T = self.T.get()
-                best_c, best_E = MCsearch(phi, None, hp, nu, T)
+                best_c, best_E = MCsearch(hp = hp, c = [], phi = phi, nu = nu, T=T)
             else:
                 E_star = self.E_star.get()
                 T_init = self.T_init.get()
                 T_final = self.T_final.get()
                 chi = self.chi.get()
-                best_c, best_E = REMCSimulation(phi, c, hp, nu, E_star, T_init, T_final, chi)
 
-            # Affichage du résultat
+                # Réinitialiser la barre de progression
+                self.progress_value.set(0.0)
+
+                # Définir un callback pour mettre à jour la progression
+                def update_progress(value):
+                    self.progress_value.set(value)
+                    self.root.update_idletasks()  # Mettre à jour l'interface
+
+                best_c, best_E = REMC_multiprocessing(hp = hp, E_star = E_star, phi = phi, nu = nu, 
+                                                T_init=T_init, T_final=T_final, chi=chi)
+
+            # Afficher le résultat
             self.result_text.delete(1.0, tk.END)
-            self.result_text.insert(tk.END, f"Énergie minimale trouvée: {best_E}\n")
-            self.result_text.insert(tk.END, f"Meilleure configuration: {best_c}\n")
+            self.result_text.insert(tk.END, f"Minimum energy found: {best_E}\n")
+            self.result_text.insert(tk.END, f"Best configuration: {best_c}\n")
 
-            # Affichage du plot
+            # Afficher le plot
             fig = plot_molecule_interface(best_c, hp)
             self.display_plot(fig)
 
         except Exception as e:
-            tk.messagebox.showerror("Erreur", f"Une erreur est survenue: {e}")
+            tk.messagebox.showerror("Error", f"An error occurred: {e}")
+
 
     def display_plot(self, fig):
-        # Efface le canvas précédent s'il existe
+        # Clear previous canvas
         for widget in self.canvas_frame.winfo_children():
             widget.destroy()
-        # Affiche le nouveau plot
+        # Display new plot
         canvas = FigureCanvasTkAgg(fig, master=self.canvas_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
 
 
 # --- Lancement de l'application ---
