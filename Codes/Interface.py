@@ -59,12 +59,10 @@ def plot_molecule_interface(c, hp_sequence, point_size=200, grid_color='gray', b
     return fig
 
 
-
 class HPModelApp:
     def __init__(self, root):
         self.root = root
         self.root.title("HP Model Simulation")
-
         self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
 
         # Variables to store selected method and parameters
@@ -83,6 +81,7 @@ class HPModelApp:
         self.remc_T_init = tk.DoubleVar(value=160.0)
         self.remc_T_final = tk.DoubleVar(value=220.0)
         self.remc_chi = tk.IntVar(value=5)
+        self.remc_max_iteration = tk.IntVar(value=300)
         self.remc_nb_processus = tk.IntVar(value=4)
 
         # GUI Layout
@@ -138,14 +137,17 @@ class HPModelApp:
         ttk.Label(self.remc_frame, text="Number of Replicas (chi):").grid(row=4, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_chi).grid(row=4, column=1, sticky="ew")
 
-        ttk.Label(self.remc_frame, text="Number of Processes:").grid(row=5, column=0, sticky="w")
-        ttk.Entry(self.remc_frame, textvariable=self.remc_nb_processus).grid(row=5, column=1, sticky="ew")
+        ttk.Label(self.remc_frame, text="Max Iteration:").grid(row=5, column=0, sticky="w")
+        ttk.Entry(self.remc_frame, textvariable=self.remc_max_iteration).grid(row=5, column=1, sticky="ew")
+
+        ttk.Label(self.remc_frame, text="Number of Processes:").grid(row=6, column=0, sticky="w")
+        ttk.Entry(self.remc_frame, textvariable=self.remc_nb_processus).grid(row=6, column=1, sticky="ew")
 
         # Run Button
-        ttk.Button(left_frame, text="Run Simulation", command=self.run_simulation).grid(row=5, column=0, columnspan=2, pady=10)
+        ttk.Button(left_frame, text="Run Simulation", command=self.run_simulation).grid(row=7, column=0, columnspan=2, pady=10)
 
         # Quit Button
-        ttk.Button(left_frame, text="Quit", command=self.root.quit).grid(row=6, column=0, columnspan=2, pady=10)
+        ttk.Button(left_frame, text="Quit", command=self.root.quit).grid(row=8, column=0, columnspan=2, pady=10)
 
         # Right Frame for Results
         self.right_frame = ttk.LabelFrame(self.root, text="Results", padding=10)
@@ -154,10 +156,24 @@ class HPModelApp:
         self.result_label = ttk.Label(self.right_frame, text="Minimum Energy: ")
         self.result_label.pack()
 
+        # Frame for the plot
+        self.plot_frame = ttk.Frame(self.right_frame)
+        self.plot_frame.pack(fill=tk.BOTH, expand=True)
+
         # Initialize plot
         self.fig, self.ax = plt.subplots(figsize=(6, 6), facecolor='white')
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_frame)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack()
+
+        # Frame for coordinates
+        self.coords_frame = ttk.Frame(self.right_frame)
+        self.coords_frame.pack(fill=tk.BOTH, expand=True)
+
+        self.coords_label = ttk.Label(self.coords_frame, text="Coordinates of the best conformation:")
+        self.coords_label.pack(anchor="w")
+
+        self.coords_text = tk.Text(self.coords_frame, height=5, width=40, state='disabled')
+        self.coords_text.pack(fill=tk.BOTH, expand=True)
 
         # Initially show only MCsearch parameters
         self.on_method_change()
@@ -185,12 +201,16 @@ class HPModelApp:
             T_init = self.remc_T_init.get()
             T_final = self.remc_T_final.get()
             chi = self.remc_chi.get()
+            max_iteration = self.remc_max_iteration.get()
             nb_processus = self.remc_nb_processus.get()
-            best_conformation, best_energy = REMC_multiprocessing(hp, E_star, phi=phi, nu=nu, T_init=T_init, T_final=T_final, chi=chi, nb_processus=nb_processus)
+            best_conformation, best_energy = REMC_multiprocessing(
+                hp, E_star, phi=phi, nu=nu, T_init=T_init, T_final=T_final, chi=chi, max_iteration=max_iteration, nb_processus=nb_processus
+            )
 
         # Update results
         self.result_label.config(text=f"Minimum Energy: {best_energy}")
         self.plot_conformation(best_conformation, hp)
+        self.display_coordinates(best_conformation)
 
     def plot_conformation(self, conformation, hp_sequence):
         self.ax.clear()
@@ -198,7 +218,12 @@ class HPModelApp:
         self.canvas.figure = self.fig
         self.canvas.draw()
 
-# Example usage
+    def display_coordinates(self, conformation):
+        self.coords_text.config(state='normal')
+        self.coords_text.delete(1.0, tk.END)
+        self.coords_text.insert(tk.END, " ".join([f"({x}, {y})" for x, y in conformation]))
+        self.coords_text.config(state='disabled')
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = HPModelApp(root)

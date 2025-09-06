@@ -62,7 +62,7 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
 
 
 
-def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5):
+def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iterations=300):
     """
     Perform a Replica Exchange Monte Carlo (REMC) simulation to find a low-energy conformation of an HP sequence.
     Args:
@@ -93,7 +93,6 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
     offset = 0
 
     # Maximum number of iterations to prevent infinite loops
-    max_iterations = 300
     iteration = 0
 
     while best_energy > E_star and iteration < max_iterations:
@@ -135,20 +134,20 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
 
 
 
-def worker_REMC(hp, E_star, phi, nu, T_init, T_final, chi, resultat_partage, lock, index):
+def worker_REMC(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, resultat_partage, lock, index):
     """
     Worker function for multiprocessing: runs REMCSimulation with a random initial conformation.
     Always stores the best conformation found.
     """
     c = generate_random_conformation(hp)
-    best_conformation, best_energy = REMCSimulation(hp, E_star, c, phi, nu, T_init, T_final, chi)
+    best_conformation, best_energy = REMCSimulation(hp, E_star, c, phi, nu, T_init, T_final, chi, max_iteration)
     with lock:
         resultat_partage[index] = (best_conformation, best_energy)
     return (best_conformation, best_energy)
 
 
 
-def REMC_multiprocessing(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, nb_processus=4):
+def REMC_multiprocessing(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iteration =300,  nb_processus=4):
     """
     Run REMCSimulation in parallel using multiprocessing.
     Returns the best conformation found, even if no conformation satisfies E_star.
@@ -162,7 +161,7 @@ def REMC_multiprocessing(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, c
     for i in range(nb_processus):
         p = multiprocessing.Process(
             target=worker_REMC,
-            args=(hp, E_star, phi, nu, T_init, T_final, chi, resultat_partage, lock, i)
+            args=(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, resultat_partage, lock, i)
         )
         processus.append(p)
         p.start()
@@ -236,16 +235,23 @@ if __name__ == "__main__":
 
     # -- Test REMC_multiprocessing -----
     elif test == "test_REMC_multiprocessing":
+        # S1-1
+        #hp = "HPHPPHHPHPPHPHHPPHPH"
+        #E_star = -9  
+
+        # S1-3
+        #hp = "PPHPPHHPPPPHHPPPPHHPPPPHH"
+        #E_star = -8
         
         # S1-7
         #hp = "PPHHHPHHHHHHHHPPPHHHHHHHHHHPHPPPHHHHHHHHHHHHPPPPHHHHHHPHHPHP"
-        #E_star = -36  # Target energy
+        #E_star = -36 
 
         # S1-4
         hp = "PPPHHPPHHPPPPPHHHHHHHPPHHPPPPHHPPHPP"
         E_star = -14
 
-        best_conformation, best_energy = REMC_multiprocessing(hp, E_star, nb_processus = 4)
+        best_conformation, best_energy = REMC_multiprocessing(hp, E_star, max_iteration=100, nb_processus = 4)
         print("Best conformation found:", best_conformation)
         print("Associated energy:", best_energy)
         plot_molecule(best_conformation, hp)
