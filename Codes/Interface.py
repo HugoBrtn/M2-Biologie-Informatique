@@ -221,7 +221,7 @@ class HPModelApp:
     def display_coordinates(self, conformation):
         self.coords_text.config(state='normal')
         self.coords_text.delete(1.0, tk.END)
-        self.coords_text.insert(tk.END, " ".join([f"({x}, {y})" for x, y in conformation]))
+        self.coords_text.insert(tk.END, " , ".join([f"({x}, {y})" for x, y in conformation]))
         self.coords_text.config(state='disabled')
 
 if __name__ == "__main__":
