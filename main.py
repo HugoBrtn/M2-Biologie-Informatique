@@ -1,70 +1,113 @@
 from Monte_Carlo import *
 from Grid import *
 
+############################################################################################
+###################################### PARAMETERS ##########################################
+############################################################################################
 
-# ---------- Monte Carlo / REMC ----------
-if __name__ == "__main__":
+#--- Method & Plotting ---------------------------------------------------------------------
+method = "REMC_parallelized"  # "REMC_multi_processes"  "MC_search"  "REMC_parallelized"
+plot = True # Chose True to plot the best configuration, false otherwise
 
-    method = "MC_search"  # "REMC_multiprocessing"   "MC_search"
-    plot = True # Chose True to plot the best configuration, false otherwise
+#--- Molecule Parameters -------------------------------------------------------------------
+hp = "PPPHHPPHHPPPPPHHHHHHHPPHHPPPPHHPPHPP"                # HP Sequence
+E_star = -14                                               # Target Energy
 
-    # Molecule Parameters
-    hp = "PPPHHPPHHPPPPPHHHHHHHPPHHPPPPHHPPHPP"
-    E_star = -14
+#--- REMC Parallelized Method Parameters ---------------------------------------------------
+phi_paral = 500                     # Iterations in Monte Carlo search
+nu_paral = 0.4                      # Porbability of a pull move
+T_init_paral = 160                  # Initial temperature
+T_final_paral = 220                 # Final Temperature
+chi_paral = 5                       # Number of replicas
+max_iteration_paral = 500           # Number of maximum iteration
+timeout_paral = 300                 # Timeout (in seconds)
 
-    # -- REMC_multiprocessing -----
-    if method == "REMC_multiprocessing":
+#--- REMC Multi Method Parameters ----------------------------------------------------------
+phi_multi = 500                     # Iterations in Monte Carlo search
+nu_multi = 0.4                      # Porbability of a pull move
+T_init_multi = 160                  # Initial temperature
+T_final_multi = 220                 # Final Temperature
+chi_multi = 5                       # Number of replicas
+max_iteration_multi = 500           # Number of maximum iteration
+nb_processus_multi = 8              # Number of simulations (differents initial conformations)
+timeout_multi = 300                 # Timeout (in seconds)
 
-        # REMC Method Parameters
-        phi = 500                           # Iterations in Monte Carlo search
-        nu = 0.4                            # Porbability of a pull move
-        T_init = 160                        # Initial temperature
-        T_final = 220                       # Final Temperature
-        chi = 5                             # Number of replicas
-        max_iteration = 500                 # Number of maximum iteration
-        nb_processus = 8                    # Number of simulations
-        timeout = 300                       # Timeout in seconds
+#--- Monte Carlo Method Parameters ---------------------------------------------------------
+phi_mc = 10000                      # Iterations in Monte Carlo search
+nu_mc = 0.4                         # Probability of a pull move
+T_mc = 160                          # Temperature
 
-        # Execution time calculation
-        time_init = time.time()
+
+
+############################################################################################
+#################################### CODE EXECUTION ########################################
+############################################################################################
+
+
+#--- REMC Parallelized ---------------------------------------------------------------------
+if method == "REMC_parallelized":
+
+    # Execution time calculation
+    time_init = time.time()
+    
+    # Function
+    best_conformation, best_energy = REMC_paral(hp=hp, E_star=E_star, phi=phi_paral,
+                                                nu=nu_paral, T_init=T_init_paral, 
+                                                T_final=T_final_paral, chi=chi_paral, 
+                                                max_iterations=max_iteration_paral, 
+                                                timeout=timeout_paral)
+
+    execution_time = time.time() - time_init
         
-        # Function
-        best_conformation, best_energy = REMC_multiprocessing(hp=hp, E_star=E_star, phi=phi,
-                                                              nu=nu, T_init=T_init, T_final=T_final,
-                                                              chi=chi, max_iteration=max_iteration, 
-                                                              nb_processus=nb_processus, 
-                                                              timeout=timeout)
-        execution_time = time.time() - time_init
-        
-        # Results
-        print("execution time: " + str(execution_time))
-        print("Best conformation found:", best_conformation)
-        print("Associated energy:", best_energy)
+    # Results
+    print("execution time: " + str(execution_time))
+    print("Best conformation found:", best_conformation)
+    print("Associated energy:", best_energy)
 
-        if plot :
-            plot_molecule(best_conformation, hp)
+    if plot :
+        plot_molecule(best_conformation, hp)
+
+
+#--- REMC Multi -------------------------------------------------------------------------
+elif method == "REMC_multi_processes":
+
+    # Execution time calculation
+    time_init = time.time()
+    
+    # Function
+    best_conformation, best_energy = REMC_multi(hp=hp, E_star=E_star, phi=phi_multi,
+                                                nu=nu_multi, T_init=T_init_multi, 
+                                                T_final=T_final_multi, chi=chi_multi, 
+                                                max_iteration=max_iteration_multi, 
+                                                nb_processus=nb_processus_multi, 
+                                                timeout=timeout_multi)
+
+    execution_time = time.time() - time_init
+        
+    # Results
+    print("execution time: " + str(execution_time))
+    print("Best conformation found:", best_conformation)
+    print("Associated energy:", best_energy)
+
+    if plot :
+        plot_molecule(best_conformation, hp)
     
 
-    # -- REMC_multiprocessing -----
-    elif method == "MC_search":
+#--- Monte Carlo Search ----------------------------------------------------------------
+elif method == "MC_search":        
 
-        # Monte Carlo Method Parameters
-        phi = 10000                         # Iterations in Monte Carlo search
-        nu = 0.4                            # Probability of a pull move
-        T = 160                             # Temperature
-
-        # Execution time calculation
-        time_init = time.time()
+    # Execution time calculation
+    time_init = time.time()
         
-        # Function
-        best_conformation, best_energy = MCsearch(hp=hp, phi=phi, nu=nu, T=T)
-        execution_time = time.time() - time_init
+    # Function
+    best_conformation, best_energy = MCsearch(hp=hp, phi=phi_mc, nu=nu_mc, T=T_mc)
+    execution_time = time.time() - time_init
         
-        # Results
-        print("execution time: " + str(execution_time))
-        print("Best conformation found:", best_conformation)
-        print("Associated energy:", best_energy)
+    # Results
+    print("execution time: " + str(execution_time))
+    print("Best conformation found:", best_conformation)
+    print("Associated energy:", best_energy)
 
-        if plot :
-            plot_molecule(best_conformation, hp)
+    if plot :
+        plot_molecule(best_conformation, hp)
 

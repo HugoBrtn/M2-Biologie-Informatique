@@ -1,12 +1,11 @@
 from Monte_Carlo import *
-from Grid import *
 from Neighbourhoods import *
 from Others_function import *
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import sys
+
 
 def plot_molecule_interface(c, hp_sequence, point_size=200, grid_color='gray', bg_color='white'):
     """
@@ -66,16 +65,16 @@ class HPModelApp:
         self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
 
         # Variables to store selected method and parameters
-        self.method_var = tk.StringVar(value="MCsearch")
+        self.method_var = tk.StringVar(value="Monte Carlo Search")
         self.hp_sequence = tk.StringVar(value="HPHPPHHPHPPHPHHPPHPH")
         self.E_star = tk.IntVar(value=-9)
 
-        # Parameters for MCsearch
+        # Parameters for Monte Carlo Search
         self.mc_phi = tk.IntVar(value=500)
         self.mc_nu = tk.DoubleVar(value=0.5)
         self.mc_T = tk.DoubleVar(value=160.0)
 
-        # Parameters for REMCSimulation
+        # Parameters for REMC multi Processes
         self.remc_phi = tk.IntVar(value=500)
         self.remc_nu = tk.DoubleVar(value=0.5)
         self.remc_T_init = tk.DoubleVar(value=160.0)
@@ -83,6 +82,14 @@ class HPModelApp:
         self.remc_chi = tk.IntVar(value=5)
         self.remc_max_iteration = tk.IntVar(value=300)
         self.remc_nb_processus = tk.IntVar(value=4)
+
+        # Parameters for REMC parallelized
+        self.remc_paral_phi = tk.IntVar(value=500)
+        self.remc_paral_nu = tk.DoubleVar(value=0.5)
+        self.remc_paral_T_init = tk.DoubleVar(value=160.0)
+        self.remc_paral_T_final = tk.DoubleVar(value=220.0)
+        self.remc_paral_chi = tk.IntVar(value=5)
+        self.remc_paral_max_iterations = tk.IntVar(value=300)
 
         # GUI Layout
         self.setup_ui()
@@ -94,7 +101,12 @@ class HPModelApp:
 
         # Method Selection
         ttk.Label(left_frame, text="Method:").grid(row=0, column=0, sticky="w")
-        method_combobox = ttk.Combobox(left_frame, textvariable=self.method_var, values=["MCsearch", "REMCSimulation"], state="readonly")
+        method_combobox = ttk.Combobox(
+            left_frame,
+            textvariable=self.method_var,
+            values=["Monte Carlo Search", "REMC Multi Processes", "REMC Parallelized"],
+            state="readonly"
+        )
         method_combobox.grid(row=0, column=1, sticky="ew")
         method_combobox.bind("<<ComboboxSelected>>", self.on_method_change)
 
@@ -105,62 +117,65 @@ class HPModelApp:
         ttk.Label(left_frame, text="Target Energy (E*):").grid(row=2, column=0, sticky="w")
         ttk.Entry(left_frame, textvariable=self.E_star).grid(row=2, column=1, sticky="ew")
 
-        # MCsearch Parameters Frame
-        self.mc_frame = ttk.LabelFrame(left_frame, text="MCsearch Parameters", padding=5)
+        # Monte Carlo Search Parameters Frame
+        self.mc_frame = ttk.LabelFrame(left_frame, text="Monte Carlo Search Parameters", padding=5)
         self.mc_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=5)
-
         ttk.Label(self.mc_frame, text="Iterations (phi):").grid(row=0, column=0, sticky="w")
         ttk.Entry(self.mc_frame, textvariable=self.mc_phi).grid(row=0, column=1, sticky="ew")
-
         ttk.Label(self.mc_frame, text="Pull Move Probability (nu):").grid(row=1, column=0, sticky="w")
         ttk.Entry(self.mc_frame, textvariable=self.mc_nu).grid(row=1, column=1, sticky="ew")
-
         ttk.Label(self.mc_frame, text="Temperature (T):").grid(row=2, column=0, sticky="w")
         ttk.Entry(self.mc_frame, textvariable=self.mc_T).grid(row=2, column=1, sticky="ew")
 
-        # REMCSimulation Parameters Frame
+        # REMC multi Processes Parameters Frame
         self.remc_frame = ttk.LabelFrame(left_frame, text="REMC Simulation Parameters", padding=5)
         self.remc_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
-
         ttk.Label(self.remc_frame, text="MC Iterations (phi):").grid(row=0, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_phi).grid(row=0, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Pull Move Probability (nu):").grid(row=1, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_nu).grid(row=1, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Initial Temperature (T_init):").grid(row=2, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_T_init).grid(row=2, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Final Temperature (T_final):").grid(row=3, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_T_final).grid(row=3, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Number of Replicas (chi):").grid(row=4, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_chi).grid(row=4, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Max REMC Iteration:").grid(row=5, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_max_iteration).grid(row=5, column=1, sticky="ew")
-
         ttk.Label(self.remc_frame, text="Number of Processes:").grid(row=6, column=0, sticky="w")
         ttk.Entry(self.remc_frame, textvariable=self.remc_nb_processus).grid(row=6, column=1, sticky="ew")
 
+        # REMC parallelized Parameters Frame
+        self.remc_paral_frame = ttk.LabelFrame(left_frame, text="REMC Simulation (Parallel) Parameters", padding=5)
+        self.remc_paral_frame.grid(row=5, column=0, columnspan=2, sticky="ew", pady=5)
+        ttk.Label(self.remc_paral_frame, text="MC Iterations (phi):").grid(row=0, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_phi).grid(row=0, column=1, sticky="ew")
+        ttk.Label(self.remc_paral_frame, text="Pull Move Probability (nu):").grid(row=1, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_nu).grid(row=1, column=1, sticky="ew")
+        ttk.Label(self.remc_paral_frame, text="Initial Temperature (T_init):").grid(row=2, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_T_init).grid(row=2, column=1, sticky="ew")
+        ttk.Label(self.remc_paral_frame, text="Final Temperature (T_final):").grid(row=3, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_T_final).grid(row=3, column=1, sticky="ew")
+        ttk.Label(self.remc_paral_frame, text="Number of Replicas (chi):").grid(row=4, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_chi).grid(row=4, column=1, sticky="ew")
+        ttk.Label(self.remc_paral_frame, text="Max REMC Iterations:").grid(row=5, column=0, sticky="w")
+        ttk.Entry(self.remc_paral_frame, textvariable=self.remc_paral_max_iterations).grid(row=5, column=1, sticky="ew")
+
         # Run Button
-        ttk.Button(left_frame, text="Run Simulation", command=self.run_simulation).grid(row=7, column=0, columnspan=2, pady=10)
+        ttk.Button(left_frame, text="Run Simulation", command=self.run_simulation).grid(row=8, column=0, columnspan=2, pady=10)
 
         # Quit Button
-        ttk.Button(left_frame, text="Quit", command=self.root.quit).grid(row=8, column=0, columnspan=2, pady=10)
+        ttk.Button(left_frame, text="Quit", command=self.root.quit).grid(row=9, column=0, columnspan=2, pady=10)
 
         # Right Frame for Results
         self.right_frame = ttk.LabelFrame(self.root, text="Results", padding=10)
         self.right_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
-
         self.result_label = ttk.Label(self.right_frame, text="Minimum Energy: ")
         self.result_label.pack()
 
         # Frame for the plot
         self.plot_frame = ttk.Frame(self.right_frame)
         self.plot_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Initialize plot
         self.fig, self.ax = plt.subplots(figsize=(6, 6), facecolor='white')
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack()
@@ -168,34 +183,38 @@ class HPModelApp:
         # Frame for coordinates
         self.coords_frame = ttk.Frame(self.right_frame)
         self.coords_frame.pack(fill=tk.BOTH, expand=True)
-
         self.coords_label = ttk.Label(self.coords_frame, text="Coordinates of the best conformation:")
         self.coords_label.pack(anchor="w")
-
         self.coords_text = tk.Text(self.coords_frame, height=5, width=40, state='disabled')
         self.coords_text.pack(fill=tk.BOTH, expand=True)
 
-        # Initially show only MCsearch parameters
+        # Initially show only Monte Carlo parameters    
         self.on_method_change()
 
     def on_method_change(self, event=None):
-        if self.method_var.get() == "MCsearch":
+        if self.method_var.get() == "Monte Carlo Search":
             self.mc_frame.grid()
             self.remc_frame.grid_remove()
-        else:
+            self.remc_paral_frame.grid_remove()
+        elif self.method_var.get() == "REMC Multi Processes":
             self.mc_frame.grid_remove()
             self.remc_frame.grid()
+            self.remc_paral_frame.grid_remove()
+        else:  # Remc Parallelized
+            self.mc_frame.grid_remove()
+            self.remc_frame.grid_remove()
+            self.remc_paral_frame.grid()
 
     def run_simulation(self):
         hp = self.hp_sequence.get()
         E_star = self.E_star.get()
 
-        if self.method_var.get() == "MCsearch":
+        if self.method_var.get() == "Monte Carlo Search":
             phi = self.mc_phi.get()
             nu = self.mc_nu.get()
             T = self.mc_T.get()
             best_conformation, best_energy = MCsearch(hp, phi=phi, nu=nu, T=T)
-        else:
+        elif self.method_var.get() == "REMC Multi Processes":
             phi = self.remc_phi.get()
             nu = self.remc_nu.get()
             T_init = self.remc_T_init.get()
@@ -203,8 +222,18 @@ class HPModelApp:
             chi = self.remc_chi.get()
             max_iteration = self.remc_max_iteration.get()
             nb_processus = self.remc_nb_processus.get()
-            best_conformation, best_energy = REMC_multiprocessing(
+            best_conformation, best_energy = REMC_multi(
                 hp, E_star, phi=phi, nu=nu, T_init=T_init, T_final=T_final, chi=chi, max_iteration=max_iteration, nb_processus=nb_processus
+            )
+        else:  # Remc Parallelized
+            phi = self.remc_paral_phi.get()
+            nu = self.remc_paral_nu.get()
+            T_init = self.remc_paral_T_init.get()
+            T_final = self.remc_paral_T_final.get()
+            chi = self.remc_paral_chi.get()
+            max_iterations = self.remc_paral_max_iterations.get()
+            best_conformation, best_energy = REMC_paral(
+                hp, E_star, phi=phi, nu=nu, T_init=T_init, T_final=T_final, chi=chi, max_iterations=max_iterations
             )
 
         # Update results
@@ -223,6 +252,7 @@ class HPModelApp:
         self.coords_text.delete(1.0, tk.END)
         self.coords_text.insert(tk.END, " , ".join([f"({x}, {y})" for x, y in conformation]))
         self.coords_text.config(state='disabled')
+
 
 if __name__ == "__main__":
     root = tk.Tk()
