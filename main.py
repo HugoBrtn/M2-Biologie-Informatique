@@ -5,8 +5,8 @@ from Grid import *
 # ---------- Monte Carlo / REMC ----------
 if __name__ == "__main__":
 
-    method = "REMC_multiprocessing"  # "REMC_multiprocessing"   "MC_search"
-    plot = True
+    method = "MC_search"  # "REMC_multiprocessing"   "MC_search"
+    plot = True # Chose True to plot the best configuration, false otherwise
 
     # Molecule Parameters
     hp = "PPPHHPPHHPPPPPHHHHHHHPPHHPPPPHHPPHPP"
@@ -18,12 +18,12 @@ if __name__ == "__main__":
         # REMC Method Parameters
         phi = 500                           # Iterations in Monte Carlo search
         nu = 0.4                            # Porbability of a pull move
-        T_init = 160
-        T_final = 220
-        chi = 5
-        max_iteration = 500
-        nb_processus = 8
-        timeout = 300                        # seconds
+        T_init = 160                        # Initial temperature
+        T_final = 220                       # Final Temperature
+        chi = 5                             # Number of replicas
+        max_iteration = 500                 # Number of maximum iteration
+        nb_processus = 8                    # Number of simulations
+        timeout = 300                       # Timeout in seconds
 
         # Execution time calculation
         time_init = time.time()
@@ -44,19 +44,20 @@ if __name__ == "__main__":
         if plot :
             plot_molecule(best_conformation, hp)
     
+
     # -- REMC_multiprocessing -----
     elif method == "MC_search":
 
-        # REMC Method Parameters
-        phi = 500                           # Iterations in Monte Carlo search
-        nu = 0.4                            # Porbability of a pull move
-        T = 160
+        # Monte Carlo Method Parameters
+        phi = 10000                         # Iterations in Monte Carlo search
+        nu = 0.4                            # Probability of a pull move
+        T = 160                             # Temperature
 
         # Execution time calculation
         time_init = time.time()
         
         # Function
-        best_conformation, best_energy = MCsearch(hp=hp, c=c, phi=phi, nu=nu, T=T)
+        best_conformation, best_energy = MCsearch(hp=hp, phi=phi, nu=nu, T=T)
         execution_time = time.time() - time_init
         
         # Results
