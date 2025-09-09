@@ -52,20 +52,26 @@ def M_vshd(c, k):
     # Case 3: For internal residues, try corner or crankshaft move
     else:
         rand = randint(1, 2)  # Randomly choose between corner and crankshaft
-        corner_possible, new_c_corner = corner_move(c_prime, k)
-        crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
-
-        # Try corner move first if randomly selected
-        if rand == 1 and corner_possible:
-            return (True, new_c_corner)
         
-        # Try crankshaft move if possible
-        if crankshaft_possible:
-            return (True, new_c_crankshaft)
-
-        # If crankshaft not possible but corner is, use corner move
-        if corner_possible:
-            return (True, new_c_corner)
+        # Try corner move first if randomly selected, crankshaft otherwise
+        if rand == 1 :
+            corner_possible, new_c_corner = corner_move(c_prime, k)
+            if corner_possible:
+                return (True, new_c_corner)
+            else :
+                crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
+                if crankshaft_possible:
+                    return (True, new_c_crankshaft)
+                
+        # Try crankshaft move if possible, corner otherwise
+        else :
+            crankshaft_possible, new_c_crankshaft = crankshaft_move(c_prime, k)
+            if crankshaft_possible:
+                return (True, new_c_crankshaft)
+            else :
+                corner_possible, new_c_corner = corner_move(c_prime, k)
+                if corner_possible:
+                    return (True, new_c_corner)
         
     # If no move is possible, return the unchanged conformation
     return (False, c_prime)
@@ -128,7 +134,7 @@ def corner_move(c, k):
 
     # Create variables containing the coordinates of k, its previous neighbors, and its next one.
     coord, coord_prev, coord_next = cp[k], cp[k-1], cp[k+1]
-    x, y = coord[0], coord[1]
+    x = coord[0]
     x_prev, y_prev = coord_prev[0], coord_prev[1]
     x_next, y_next = coord_next[0], coord_next[1]
     if x_prev != x_next and y_prev != y_next:
@@ -288,7 +294,7 @@ def pull_move_forward(c, k, max_try=3):
             cp[k + q + 1] = (L1_x, L1_y)
             if is_valid_conformation(cp):
                 return (True, cp)
-            elif seuil < max_try:
+            elif seuil < max_try: # If confromation is not valid, retry utill max_try
                 cp = c.copy()
                 cp2 = c.copy()
                 q = 0
@@ -300,14 +306,14 @@ def pull_move_forward(c, k, max_try=3):
             cp[k + q + 1] = (L2_x, L2_y)
             if is_valid_conformation(cp):
                 return (True, cp)
-            elif seuil < max_try:
+            elif seuil < max_try: # If confromation is not valid, retry utill max_try
                 cp = c.copy()
                 cp2 = c.copy()
                 q = 0
                 seuil += 1
             else:
                 return (False, c)
-        elif rand == 1 and cond_L1 and cond_C1_in_Cp2:
+        elif rand == 1 and cond_L1 and cond_C1_in_Cp2: 
             cp[k + q + 1] = (L1_x, L1_y)
         elif cond_L2 and cond_C2_in_Cp2:
             cp[k + q + 1] = (L2_x, L2_y)

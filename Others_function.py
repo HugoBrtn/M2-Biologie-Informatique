@@ -1,5 +1,6 @@
 from random import shuffle, seed, randint
 from Grid import *
+import re
 
 
 
@@ -105,19 +106,19 @@ def E(c, hp_sequence):
 
     # List of indices of H residues
     h_indices = [i for i, residue in enumerate(hp_sequence) if residue == 'H']
+    n = len(h_indices)
     energy = 0
 
     # Iterate through all pairs of non-consecutive H residues
-    for i in range(len(h_indices)):
-        for j in range(i + 1, len(h_indices)):
+    for i in range(n):
+        for j in range(i + 1, n):
             idx_i = h_indices[i]
             idx_j = h_indices[j]
 
             # Check if residues are not consecutive in the sequence
-            if abs(idx_i - idx_j) > 1:
-
+            if idx_j - idx_i > 1:
                 # Check if residues are adjacent on the lattice
-                if abs(c[idx_i][0] - c[idx_j][0]) + abs(c[idx_i][1] - c[idx_j][1]) == 1:
+                if is_adjacent(c[idx_i], c[idx_j]):
                     energy -= 1  # Each H-H contact contributes -1 to the 
                     
     return energy
@@ -135,8 +136,6 @@ def is_adjacent(pos1, pos2):
     """
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1]) == 1
 
-
-import re
 
 def expand_hp_sequence(compact_notation):
     """
@@ -192,7 +191,7 @@ def expand_hp_sequence(compact_notation):
 # ----- Others functions Tests -----
 if __name__ == "__main__":
 
-    test = "expanded"    #  "linear_conformation"  # "energy"    # "linear_conformation"    #  "expanded"
+    test = "energy"    #  "linear_conformation"  # "energy"    # "linear_conformation"    #  "expanded"
 
     # ----- Test Energy -----
     if test == "energy":

@@ -10,8 +10,8 @@ method = "REMC_multi_processes"  # "REMC_multi_processes"  "MC_search"  "REMC_pa
 plot = True # Chose True to plot the best configuration, false otherwise
 
 #--- Molecule Parameters -------------------------------------------------------------------
-hp = "PPHPPHHPPPPHHPPPPHHPPPPHH"                # HP Sequence
-E_star = -8                                               # Target Energy
+hp = "HHPPHPPHPPHPPHPPHPPHPPHH"                # HP Sequence
+E_star = -9                                               # Target Energy
 
 #--- REMC Parallelized Method Parameters ---------------------------------------------------
 phi_paral = 500                     # Iterations in Monte Carlo search

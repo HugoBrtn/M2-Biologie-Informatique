@@ -259,9 +259,11 @@ def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5
             # Accept exchange with Metropolis criterion
             if delta <= 0:
                 replicas[i], replicas[j] = replicas[j], replicas[i]
+                temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             else:
                 if random.random() < exp(-delta):
                     replicas[i], replicas[j] = replicas[j], replicas[i]
+                    temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             i += 2
         # Toggle offset for next iteration
         offset = 1 - offset
