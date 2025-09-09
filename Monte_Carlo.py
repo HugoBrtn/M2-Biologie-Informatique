@@ -62,7 +62,7 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
 
 
 
-def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iterations=300):
+def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iterations=300, timeout =300):
     """
     Perform a Replica Exchange Monte Carlo (REMC) simulation to find a low-energy conformation of an HP sequence.
     Args:
@@ -95,7 +95,10 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
     # Maximum number of iterations to prevent infinite loops
     iteration = 0
 
-    while best_energy > E_star and iteration < max_iterations:
+    # Timeout initialization
+    time_start = time.time()
+
+    while best_energy > E_star and iteration < max_iterations and time.time() - time_start < timeout :
         iteration += 1
         print(f"Iteration {iteration}, Best Energy: {best_energy}")
 
@@ -134,20 +137,22 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
 
 
 
-def worker_REMC_multi(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, resultat_partage, lock, index):
+def worker_REMC_multi(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, timeout, resultat_partage, lock, index):
     """
     Worker function for multiprocessing: runs REMC Simulation with a random initial conformation.
     Always stores the best conformation found.
     """
     c = generate_random_conformation(hp)
-    best_conformation, best_energy = REMCSimulation(hp, E_star, c, phi, nu, T_init, T_final, chi, max_iteration)
+    best_conformation, best_energy = REMCSimulation(hp=hp, E_star=E_star, c=c, phi=phi, nu=nu, T_init=T_init, 
+                                                    T_final=T_final, chi=chi, max_iterations=max_iteration, 
+                                                    timeout=timeout)
     with lock:
         resultat_partage[index] = (best_conformation, best_energy)
     return (best_conformation, best_energy)
 
 
 
-def REMC_multi(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iteration =300,  nb_processus=4, timeout = 300):
+def REMC_multi(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iteration = 300,  nb_processus=4, timeout = 300):
     """
     Run REMC Simulation in parallel using multiprocessing for calculating REMC for different initial configurations.
     Returns the best conformation found, even if no conformation satisfies E_star.
@@ -161,16 +166,15 @@ def REMC_multi(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_
     for i in range(nb_processus):
         p = multiprocessing.Process(
             target=worker_REMC_multi,
-            args=(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, resultat_partage, lock, i)
+            args=(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, timeout, resultat_partage, lock, i)
         )
         processus.append(p)
         p.start()
 
     # Wait for all processes to finish or a solution to be found
-    best_conformation, best_energy = None, float('inf')
-    start_time = time.time() 
+    best_conformation, best_energy = generate_linear_conformation(hp), 0
 
-    while time.time() - start_time < timeout:
+    while True:
         with lock:
             for i in range(nb_processus):
                 if resultat_partage[i] is not None:
@@ -189,9 +193,6 @@ def REMC_multi(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_
             break
 
         time.sleep(0.1)
-
-    if time.time() - start_time > timeout :
-        return best_conformation, best_energy
 
     # Terminate any remaining processes
     for p in processus:

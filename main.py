@@ -21,6 +21,7 @@ T_final_paral = 220                 # Final Temperature
 chi_paral = 5                       # Number of replicas
 max_iteration_paral = 500           # Number of maximum iteration
 timeout_paral = 300                 # Timeout (in seconds)
+random_initial_config = True        # If true, the initial c is random, otherwise linear
 
 #--- REMC Multi Method Parameters ----------------------------------------------------------
 phi_multi = 500                     # Iterations in Monte Carlo search
@@ -51,11 +52,19 @@ if method == "REMC_parallelized":
     time_init = time.time()
     
     # Function
-    best_conformation, best_energy = REMC_paral(hp=hp, E_star=E_star, phi=phi_paral,
-                                                nu=nu_paral, T_init=T_init_paral, 
-                                                T_final=T_final_paral, chi=chi_paral, 
-                                                max_iterations=max_iteration_paral, 
-                                                timeout=timeout_paral)
+    if random_initial_config :
+        best_conformation, best_energy = REMC_paral(hp=hp, E_star=E_star, phi=phi_paral,
+                                                    nu=nu_paral, T_init=T_init_paral, 
+                                                    T_final=T_final_paral, chi=chi_paral, 
+                                                    max_iterations=max_iteration_paral, 
+                                                    timeout=timeout_paral)
+    else :
+        best_conformation, best_energy = REMC_paral(hp=hp, c= generate_linear_conformation(hp),
+                                                    E_star=E_star, phi=phi_paral,
+                                                    nu=nu_paral, T_init=T_init_paral, 
+                                                    T_final=T_final_paral, chi=chi_paral, 
+                                                    max_iterations=max_iteration_paral, 
+                                                    timeout=timeout_paral)
 
     execution_time = time.time() - time_init
         
