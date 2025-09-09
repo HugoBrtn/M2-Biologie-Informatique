@@ -24,11 +24,11 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
         c = generate_random_conformation(hp)
 
     n = len(c)
-    c_mini = c.copy()  # Best conformation found
+    # c_mini = c.copy()  # Best conformation found
     cp = c.copy()
     c_courant = c.copy()
     Ep = E(cp, hp)  # Current energy
-    E_mini = Ep  # Calculate initial energy
+    # E_mini = Ep  # Calculate initial energy
 
     for i in range(phi):
         c_courant = cp.copy()
@@ -45,9 +45,9 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
             Ep = E_c_courant
 
             # Update best conformation if this one is better
-            if E_c_courant - E_mini < 0:
-                c_mini = c_courant
-                E_mini = E_c_courant
+            # if E_c_courant - E_mini < 0:
+            #     c_mini = c_courant
+            #     E_mini = E_c_courant
         else:
             q = random.random()  # Generate a random number between 0 and 1
 
@@ -57,7 +57,7 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
                 Ep = E_c_courant
 
     # Return best conformation found and its energy
-    return c_mini, E_mini
+    return c_courant, E_c_courant #c_mini, E_mini
 
 
 
@@ -125,9 +125,11 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
             # Accept exchange with Metropolis criterion
             if delta <= 0:
                 replicas[i], replicas[j] = replicas[j], replicas[i]
+                temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             else:
-                if random.random() < exp(-delta):
+                if random.random() <= exp(-delta):
                     replicas[i], replicas[j] = replicas[j], replicas[i]
+                    temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             i += 2
 
         # Toggle offset for next iteration

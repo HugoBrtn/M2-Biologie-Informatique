@@ -10,8 +10,8 @@ method = "REMC_multi_processes"  # "REMC_multi_processes"  "MC_search"  "REMC_pa
 plot = True # Chose True to plot the best configuration, false otherwise
 
 #--- Molecule Parameters -------------------------------------------------------------------
-hp = "PPPHHPPHHPPPPPHHHHHHHPPHHPPPPHHPPHPP"                # HP Sequence
-E_star = -14                                               # Target Energy
+hp = "PPHPPHHPPPPHHPPPPHHPPPPHH"                # HP Sequence
+E_star = -8                                               # Target Energy
 
 #--- REMC Parallelized Method Parameters ---------------------------------------------------
 phi_paral = 500                     # Iterations in Monte Carlo search
@@ -29,7 +29,7 @@ nu_multi = 0.4                      # Porbability of a pull move
 T_init_multi = 160                  # Initial temperature
 T_final_multi = 220                 # Final Temperature
 chi_multi = 5                       # Number of replicas
-max_iteration_multi = 500           # Number of maximum iteration
+max_iteration_multi = 2000           # Number of maximum iteration
 nb_processus_multi = 8              # Number of simulations (differents initial conformations)
 timeout_multi = 500                 # Timeout (in seconds)
 
