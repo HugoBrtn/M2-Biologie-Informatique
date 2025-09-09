@@ -6,7 +6,7 @@ from Grid import *
 ############################################################################################
 
 #--- Method & Plotting ---------------------------------------------------------------------
-method = "REMC_parallelized"  # "REMC_multi_processes"  "MC_search"  "REMC_parallelized"
+method = "REMC_multi_processes"  # "REMC_multi_processes"  "MC_search"  "REMC_parallelized"
 plot = True # Chose True to plot the best configuration, false otherwise
 
 #--- Molecule Parameters -------------------------------------------------------------------
@@ -31,7 +31,7 @@ T_final_multi = 220                 # Final Temperature
 chi_multi = 5                       # Number of replicas
 max_iteration_multi = 500           # Number of maximum iteration
 nb_processus_multi = 8              # Number of simulations (differents initial conformations)
-timeout_multi = 300                 # Timeout (in seconds)
+timeout_multi = 500                 # Timeout (in seconds)
 
 #--- Monte Carlo Method Parameters ---------------------------------------------------------
 phi_mc = 10000                      # Iterations in Monte Carlo search
