@@ -51,7 +51,7 @@ def M_vshd(c, k):
 
     # Case 3: For internal residues, try corner or crankshaft move
     else:
-        rand = randint(1, 2)  # Randomly choose between corner and crankshaft
+        rand = random.randint(1, 2)  # Randomly choose between corner and crankshaft
         
         # Try corner move first if randomly selected, crankshaft otherwise
         if rand == 1 :
@@ -93,8 +93,8 @@ def end_move(c, k):
     cp = c.copy()
     if k == 0:
         neighbour_residue = c[1]  # Residue 1
-    else:  # k == n-1
-        neighbour_residue = c[-2]  # Residue n-
+    else:  
+        neighbour_residue = c[-2]  # Residue n-1
         
     # Possible directions in a 2D lattice:
     x_nr = neighbour_residue[0]

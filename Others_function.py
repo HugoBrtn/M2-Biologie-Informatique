@@ -1,8 +1,6 @@
-from random import shuffle, seed, randint
+from random import shuffle
 from Grid import *
 import re
-
-
 
 def generate_linear_conformation(hp_sequence):
     """

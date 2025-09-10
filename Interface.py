@@ -70,9 +70,9 @@ class HPModelApp:
         self.E_star = tk.IntVar(value=-9)
 
         # Parameters for Monte Carlo Search
-        self.mc_phi = tk.IntVar(value=500)
+        self.mc_phi = tk.IntVar(value=10000)
         self.mc_nu = tk.DoubleVar(value=0.5)
-        self.mc_T = tk.DoubleVar(value=160.0)
+        self.mc_T = tk.DoubleVar(value=200.0)
 
         # Parameters for REMC multi Processes
         self.remc_phi = tk.IntVar(value=500)
@@ -80,7 +80,7 @@ class HPModelApp:
         self.remc_T_init = tk.DoubleVar(value=160.0)
         self.remc_T_final = tk.DoubleVar(value=220.0)
         self.remc_chi = tk.IntVar(value=5)
-        self.remc_max_iteration = tk.IntVar(value=300)
+        self.remc_max_iteration = tk.IntVar(value=500)
         self.remc_nb_processus = tk.IntVar(value=4)
 
         # Parameters for REMC parallelized
@@ -89,7 +89,7 @@ class HPModelApp:
         self.remc_paral_T_init = tk.DoubleVar(value=160.0)
         self.remc_paral_T_final = tk.DoubleVar(value=220.0)
         self.remc_paral_chi = tk.IntVar(value=5)
-        self.remc_paral_max_iterations = tk.IntVar(value=300)
+        self.remc_paral_max_iterations = tk.IntVar(value=500)
 
         # GUI Layout
         self.setup_ui()
@@ -213,7 +213,7 @@ class HPModelApp:
             phi = self.mc_phi.get()
             nu = self.mc_nu.get()
             T = self.mc_T.get()
-            best_conformation, best_energy = MCsearch(hp, phi=phi, nu=nu, T=T)
+            best_conformation, best_energy = MCsearch(hp, phi=phi, nu=nu, T=T, E_star=E_star)
         elif self.method_var.get() == "REMC Multi Processes":
             phi = self.remc_phi.get()
             nu = self.remc_nu.get()

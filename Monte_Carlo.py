@@ -8,9 +8,9 @@ import time
 
 
 
-def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
+def MCsearch_REMC(hp, c=[], phi=500, nu=0.5, T=160):
     """
-    Perform a Monte Carlo search to find a low-energy conformation of an HP sequence.
+    Perform a Monte Carlo search to find a low-energy conformation of an HP sequence. Return the last conformation found (not necessarly the lowest energy), for REMC use purpose.
     Args:
         hp (str): HP sequence (Example: "HPPHHPH").
         c (list of tuples, optional): Current conformation as a list of (x, y) coordinates. If empty, a random conformation is generated.
@@ -24,15 +24,62 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
         c = generate_random_conformation(hp)
 
     n = len(c)
-    # c_mini = c.copy()  # Best conformation found
     cp = c.copy()
     c_courant = c.copy()
     Ep = E(cp, hp)  # Current energy
-    # E_mini = Ep  # Calculate initial energy
 
     for i in range(phi):
         c_courant = cp.copy()
-        k = randint(0, n-1)  # Choose a random residue (1-based index)
+        k = random.randint(0, n-1)  # Choose a random residue (1-based index)
+        bool, c_courant = M(c_courant, k, nu)  # Apply a random move, nu is the probability of a pull move (instead of other moves)
+
+        # Calculate energy differences
+        E_c_courant = E(c_courant, hp)
+        delta_E = E_c_courant - Ep  # Energy difference with current conformation
+
+        # Always accept if energy decreases or stays the same
+        if delta_E <= 0:
+            cp = c_courant
+            Ep = E_c_courant
+
+        else:
+            q = random.random()  # Generate a random number between 0 and 1
+
+            # Metropolis criterion: accept with certain probability if energy increases
+            if q > (1 / (exp(1) ** (delta_E / T))):
+                cp = c_courant
+                Ep = E_c_courant
+
+    # Return best conformation found and its energy
+    return c_courant, E_c_courant
+
+
+
+def MCsearch(hp, c=[], phi=500, nu=0.5, T=160, E_star = 0):
+    """
+    Perform a Monte Carlo search to find a low-energy conformation of an HP sequence. Return the lowest-energy conformation found.
+    Args:
+        hp (str): HP sequence (Example: "HPPHHPH").
+        c (list of tuples, optional): Current conformation as a list of (x, y) coordinates. If empty, a random conformation is generated.
+        phi (int, optional): Number of iterations/moves to perform. Defaults to 500.
+        nu (float, optional): Probability of a pull move (vs. other moves). Defaults to 0.5.
+        T (float, optional): Temperature parameter for Metropolis criterion. Defaults to 160.
+    Returns:
+        tuple: (best_conformation, best_energy)
+    """
+    if c == []:
+        c = generate_random_conformation(hp)
+
+    n = len(c)
+    c_mini = c.copy()  # Best conformation found
+    cp = c.copy()
+    c_courant = c.copy()
+    Ep = E(cp, hp)  # Current energy
+    E_mini = Ep  # Calculate initial energy
+
+    for i in range(phi):
+        c_courant = cp.copy()
+        k = random.randint(0, n-1)  # Choose a random residue (1-based index)
         bool, c_courant = M(c_courant, k, nu)  # Apply a random move, nu is the probability of a pull move (instead of other moves)
 
         # Calculate energy differences
@@ -45,9 +92,12 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
             Ep = E_c_courant
 
             # Update best conformation if this one is better
-            # if E_c_courant - E_mini < 0:
-            #     c_mini = c_courant
-            #     E_mini = E_c_courant
+            if E_c_courant - E_mini < 0:
+                c_mini = c_courant
+                E_mini = E_c_courant
+
+                if E_mini == E_star : # If we reach the minimum energy, we stop and return the lowest-energy conformation
+                    return c_mini, E_mini
         else:
             q = random.random()  # Generate a random number between 0 and 1
 
@@ -57,9 +107,7 @@ def MCsearch(hp, c=[], phi=500, nu=0.5, T=160):
                 Ep = E_c_courant
 
     # Return best conformation found and its energy
-    return c_courant, E_c_courant #c_mini, E_mini
-
-
+    return c_mini, E_mini
 
 
 def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iterations=300, timeout =300):
@@ -79,17 +127,32 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
     """
 
     if c == []:
-        c = generate_random_conformation(hp)
+         # Initialization of replicas with one linear conformation
+        c_init = generate_linear_conformation(hp)
+        best_energy = E(c_init, hp)
+        replicas = [(c_init, best_energy)]
+
+        # Completion of replicas with random initial conformation
+        for i in range (chi-1) :
+            c_init = generate_random_conformation(hp)
+            E_init = E(c_init, hp)
+            if E_init <= best_energy:
+
+                # Track best conformation and energy
+                best_conformation = c_init.copy()
+                best_energy = E_init
+            replicas.append((c_init, E(c_init, hp)))
+    else :
+        # Initialize replicas with the same initial conformation and energy
+        replicas = [(c.copy(), E(c, hp)) for _ in range(chi)]
+
+        # Track best conformation and energy
+        best_conformation = c.copy()
+        best_energy = E(c, hp)
 
     # Create linear temperature schedule
     temperatures = [T_init + i * (T_final - T_init) / (chi - 1) for i in range(chi)]
 
-    # Initialize replicas with the same initial conformation and energy
-    replicas = [(c.copy(), E(c, hp)) for _ in range(chi)]
-
-    # Track best conformation and energy
-    best_conformation = c.copy()
-    best_energy = E(c, hp)
     offset = 0
 
     # Maximum number of iterations to prevent infinite loops
@@ -106,7 +169,7 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
         for k in range(chi):
 
             # Perform MC search
-            new_conformation, new_energy = MCsearch(hp=hp, c=replicas[k][0], phi=phi, nu=nu, T=temperatures[k])
+            new_conformation, new_energy = MCsearch_REMC(hp=hp, c=replicas[k][0], phi=phi, nu=nu, T=temperatures[k])
             replicas[k] = (new_conformation, new_energy)
 
             # Update best conformation if needed
@@ -125,11 +188,11 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
             # Accept exchange with Metropolis criterion
             if delta <= 0:
                 replicas[i], replicas[j] = replicas[j], replicas[i]
-                temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
+                #temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             else:
                 if random.random() <= exp(-delta):
                     replicas[i], replicas[j] = replicas[j], replicas[i]
-                    temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
+                    #temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             i += 2
 
         # Toggle offset for next iteration
@@ -144,7 +207,7 @@ def worker_REMC_multi(hp, E_star, phi, nu, T_init, T_final, chi, max_iteration, 
     Worker function for multiprocessing: runs REMC Simulation with a random initial conformation.
     Always stores the best conformation found.
     """
-    c = generate_random_conformation(hp)
+    c = [] #generate_random_conformation(hp)
     best_conformation, best_energy = REMCSimulation(hp=hp, E_star=E_star, c=c, phi=phi, nu=nu, T_init=T_init, 
                                                     T_final=T_final, chi=chi, max_iterations=max_iteration, 
                                                     timeout=timeout)
@@ -209,7 +272,7 @@ def REMC_multi(hp, E_star, phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_
 def worker_MCsearch(args):
     """Wrapper to call MCsearch with correct arguments."""
     hp, c, phi, nu, T = args
-    return MCsearch(hp=hp, c=c, phi=phi, nu=nu, T=T)
+    return MCsearch_REMC(hp=hp, c=c, phi=phi, nu=nu, T=T)
 
 
 def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5, max_iterations=300, timeout=300):
@@ -218,17 +281,37 @@ def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5
     This version uses multiprocessing to parallelize the MC search for each replica.
     """
     if c == []:
-        c = generate_random_conformation(hp)
+         # Initialization of replicas with one linear conformation
+        c_init = generate_linear_conformation(hp)
+        best_energy = E(c_init, hp)
+        replicas = [(c_init, best_energy)]
+
+        # Completion of replicas with random initial conformation
+        for i in range (chi-1) :
+            c_init = generate_random_conformation(hp)
+            E_init = E(c_init, hp)
+            if E_init <= best_energy:
+
+                # Track best conformation and energy
+                best_conformation = c_init.copy()
+                best_energy = E_init
+            replicas.append((c_init, E(c_init, hp)))
+    else :
+        # Initialize replicas with the same initial conformation and energy
+        replicas = [(c.copy(), E(c, hp)) for _ in range(chi)]
+
+        # Track best conformation and energy
+        best_conformation = c.copy()
+        best_energy = E(c, hp)
+        
     # Create linear temperature schedule
     temperatures = [T_init + i * (T_final - T_init) / (chi - 1) for i in range(chi)]
-    # Initialize replicas with the same initial conformation and energy
-    replicas = [(c.copy(), E(c, hp)) for _ in range(chi)]
-    # Track best conformation and energy
-    best_conformation = c.copy()
-    best_energy = E(c, hp)
+
     offset = 0
+
     # Maximum number of iterations to prevent infinite loops
     iteration = 0
+
     # Timeout calculation
     start_time = time.time() 
 
@@ -238,13 +321,17 @@ def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5
 
         # Parallelize the MC search for each replica using multiprocessing
         with multiprocessing.Pool() as pool:
+
             # Prepare arguments for each worker
             args = [(hp, replicas[k][0], phi, nu, temperatures[k]) for k in range(chi)]
+
             # Map the work to the pool
             results = pool.map(worker_MCsearch, args)
+
             # Update replicas with results
             for k, (new_conformation, new_energy) in enumerate(results):
                 replicas[k] = (new_conformation, new_energy)
+
                 # Update best conformation if needed
                 if new_energy < best_energy:
                     best_conformation = new_conformation.copy()
@@ -254,17 +341,20 @@ def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5
         i = offset
         while i + 1 < chi:
             j = i + 1
+
             # Calculate exchange probability
             delta = (1/temperatures[j] - 1/temperatures[i]) * (replicas[i][1] - replicas[j][1])
+
             # Accept exchange with Metropolis criterion
             if delta <= 0:
                 replicas[i], replicas[j] = replicas[j], replicas[i]
-                temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
+                #temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             else:
                 if random.random() < exp(-delta):
                     replicas[i], replicas[j] = replicas[j], replicas[i]
-                    temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
+                    #temperatures[i], temperatures[j] = temperatures[j], temperatures[i]
             i += 2
+
         # Toggle offset for next iteration
         offset = 1 - offset
     return best_conformation, best_energy
