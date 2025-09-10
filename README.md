@@ -5,7 +5,7 @@ This project aims to find the lowest-energy structure of a molecule based on its
 ### Installation
 To use this project, you must first install uv on your machine. Then, you can clone this repository and use uv commands to manage the environment and dependencies.
 
-\textbf{Downloading the Project}
+**Downloading the Project**
 ```bash
 git clone https://github.com/HugoBrtn/Monte-Carlo-lattice.git
 cd Monte-Carlo-lattice
@@ -13,20 +13,20 @@ uv sync
 ```
 You can then use either the interface or the script to perform the functions.
 
-\textbf{Interface}
+**Interface**\
 To run the interface, use the following command:
 ```bash
 uv run interface.py
 ```
 
-\textbf{Script}
+**Script**\
 If you prefer to use a script directly, use this command:
 ```bash
 uv run main.py
 ```
 
 ### Functions
-\textbf{Monte Carlo Search (MC Search)} 
+**Monte Carlo Search (MC Search)**\
 This function uses the Monte Carlo method to estimate the lowest-energy configuration.
 
 Parameters :
@@ -34,7 +34,8 @@ Parameters :
 - nu : Probability of performing a pull move (otherwise VSHD move).
 - T : Temperature.
 
-\textbf{REMC on Multi-Initial Configuration (MC Search)}
+\
+**REMC on Multi-Initial Configuration (MC Search)**\
 This function uses the REMC (Replica Exchange Monte Carlo) method to estimate the lowest-energy configuration.
 It is parallelized to run REMC on multiple different random initial configurations of the molecule.
 
@@ -47,7 +48,8 @@ Parameters :
 - max_iteration : Maximum number of iterations for REMC.
 - timeout : Maximum runtime before the program terminates.
 
-\textbf{REMC with Parallelization for Replicas}
+\
+**REMC with Parallelization for Replicas**\
 This function uses the REMC method to estimate the lowest-energy configuration.
 It is parallelized to execute the Monte Carlo simulations for each replica separately.
 
