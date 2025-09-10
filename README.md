@@ -35,7 +35,7 @@ Parameters :
 - T : Temperature.
 
 \
-**REMC on Multi-Initial Configuration (MC Search)**\
+**REMC on Multi-Initial Configuration**\
 This function uses the REMC (Replica Exchange Monte Carlo) method to estimate the lowest-energy configuration.
 It is parallelized to run REMC on multiple different random initial configurations of the molecule.
 
