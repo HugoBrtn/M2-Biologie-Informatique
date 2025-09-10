@@ -115,7 +115,7 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
                 best_energy = new_energy
 
         # Attempt replica exchanges between neighboring temperatures
-        i = offset + 1
+        i = offset 
         while i + 1 < chi:
             j = i + 1
 
@@ -133,7 +133,7 @@ def REMCSimulation(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, c
             i += 2
 
         # Toggle offset for next iteration
-        offset = 1 - offset
+        offset = 1 - offset # At each iteration offset is equal to 1 or 0
 
     return best_conformation, best_energy
 
@@ -251,7 +251,7 @@ def REMC_paral(hp, E_star, c=[], phi=500, nu=0.5, T_init=160, T_final=220, chi=5
                     best_energy = new_energy
 
         # Attempt replica exchanges between neighboring temperatures
-        i = offset + 1
+        i = offset
         while i + 1 < chi:
             j = i + 1
             # Calculate exchange probability
